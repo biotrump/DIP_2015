@@ -1,3 +1,9 @@
+# DIP Homework Assignment #1
+# March  10, 2016
+# Name: Thomas Tsai
+# ID #: D04922009
+# email: d04922009@ntu.edu.tw, thomas@life100.cc
+# compiled on ubuntu 14.04 with gcc-4.9, opencv 2.4.x
 cmake_minimum_required(VERSION 2.8.10)
 project(DIP_HW C CXX)
 
@@ -122,40 +128,13 @@ if (NOT DOXYGEN_FOUND)
 	endif (DOXYGEN_FOUND)
 endif ()
 # --------------------------------------------------
-#find external/libyuv/include
-if (0)
-message("LIBYUV_DIR=${LIBYUV_DIR}" )
-find_path(LIBYUV_INC libyuv.h
-			HINTS ${LIBYUV_DIR}/include )
-message("LIBYUV_INC=${LIBYUV_INC}" )
-if(LIBYUV_INC)
-	include_directories("${LIBYUV_INC}")
-endif()
-
-set(LIBYUV_NAME $ENV{LIBYUV_NAME})
-if(NOT LIBYUV_NAME)
-	set(LIBYUV_NAME "yuv-static")
-endif()
-message("LIBYUV_NAME=${LIBYUV_NAME}")
-find_library (LIBYUV
-			NAMES ${LIBYUV_NAME}
-			PATHS ${LIBYUV_OUT}/libs/${TARGET_ARCH}
-			PATH_SUFFIXES lib
-			NO_DEFAULT_PATH)
-message("LIBYUV=${LIBYUV}")
-endif()
+# Executables
 # --------------------------------------------------
-add_executable(hw1
-	hw1.cpp
+add_executable(flip
+	flip.cpp
 )
-qt5_use_modules(hw1 Widgets  OpenGL Test Concurrent)
-if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-	target_link_libraries(hw1
-		${OpenCV_LIBS}
-	)
-else()
-	target_link_libraries(hw1
-		${OpenCV_LIBS}
-	)
-endif()
+qt5_use_modules(flip Widgets  OpenGL Test Concurrent)
+target_link_libraries(flip
+	${OpenCV_LIBS}
+)
 # --------------------------------------------------
