@@ -38,7 +38,6 @@ int flip(uint8_t *org, uint8_t *flipped, char fv)
 			for(int j = 0 ; j < WIDTH ; j ++)
 				flipped[i * WIDTH + j]=org[ i * WIDTH + (WIDTH - 1 - j)];
 	}
-	return 0;
 }
 
 /**

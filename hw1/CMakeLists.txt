@@ -130,6 +130,18 @@ endif ()
 # --------------------------------------------------
 # Executables
 # --------------------------------------------------
+# To show a rawfile
+# --------------------------------------------------
+add_executable(raw_show
+	raw_show.cpp
+)
+qt5_use_modules(raw_show Widgets  OpenGL Test Concurrent)
+target_link_libraries(raw_show
+	${OpenCV_LIBS}
+)
+# --------------------------------------------------
+# To flip a rawfile
+# --------------------------------------------------
 add_executable(flip
 	flip.cpp
 )
@@ -138,3 +150,22 @@ target_link_libraries(flip
 	${OpenCV_LIBS}
 )
 # --------------------------------------------------
+# PROBLEM 1: IMAGE ENHANCEMENT
+# --------------------------------------------------
+add_executable(p1
+	p1.cpp
+)
+qt5_use_modules(p1 Widgets  OpenGL Test Concurrent)
+target_link_libraries(p1
+	${OpenCV_LIBS}
+)
+# --------------------------------------------------
+# PROBLEM 2: NOISE REMOVAL
+# --------------------------------------------------
+add_executable(p2
+	p2.cpp
+)
+qt5_use_modules(p2 Widgets  OpenGL Test Concurrent)
+target_link_libraries(p2
+	${OpenCV_LIBS}
+)

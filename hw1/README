@@ -1,26 +1,37 @@
 # DIP Homework Assignment #1
-# March  10, 2016
-# Name: Thomas Tsai
+# March 10, 2016
+# Name: 蔡維新 Thomas Tsai
 # ID #: D04922009
 # email: d04922009@ntu.edu.tw, thomas@life100.cc
-# -----------------------------------
+# ================================================
 # OS : ubuntu 14.04 with gcc-4.8
 # cross-platform make tool: cmake 2.8 or above
 # GUI: opencv 2.4.x with QT5
-# -----------------------------------
+# the make file : CMakeLists.txt
+# ================================================
 # How to Build ?
-# -----------------------------------
+# ================================================
 # %./hw1.sh
-# or
-# %mkdir build
+# or manually
+# %mkdir -p build
 # %cd build
 # %cmake ..
 # %make
-# -----------------------------------
+# ================================================
 # How to Run?
-# -----------------------------------
-# flip the raw file,sample1.raw, and output files are "I_h.raw" and "I_v.raw"
+# ================================================
+# 0. How to show a raw file by 256x256?
+# %./bin/bin/raw_show path/to/raw_file
+# ----------------------------------------------------------------------
+# 1. flip the raw file,sample1.raw, vertically and horizontally 
+# and output flipped files are "I_h.raw" and "I_v.raw".
+# ----------------------------------------------------------------------
 # %./build/bin/flip path/to/sample1.raw
-# -----------------------------------
-
-# -----------------------------------
+# %./build/bin/raw_show path/to/I_h.raw
+# %./build/bin/raw_show path/to/I_v.raw
+# ----------------------------------------------------------------------
+# PROBLEM 1: IMAGE ENHANCEMENT
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# PROBLEM 2: NOISE REMOVAL
+# ----------------------------------------------------------------------
