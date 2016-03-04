@@ -1,6 +1,7 @@
 /** @brief DIP program to flip an image
  * @author <Thomas Tsai, thomas@life100.cc>
- * 
+ * pepper and salt noise
+ * http://www.fit.vutbr.cz/~vasicek/imagedb/?lev=35&knd=chan
  */
 #include <stdio.h>
 #include <sys/types.h>
