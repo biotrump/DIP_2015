@@ -1,0 +1,6 @@
+# opencv 2.4.8 installation in ubuntu 14.04
+# ----------------------------------------------------------------------
+# %sudo apt-get install libcv-dev libopencv-dev libhighgui-dev
+# %curl http://mirrors.kernel.org/ubuntu/pool/universe/o/opencv/libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb > libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb
+# %sudo dpkg -i libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb
+

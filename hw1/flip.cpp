@@ -76,14 +76,14 @@ int main( int argc, char** argv )
 		IplImage* fh_img8u = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(fh_img8u, u8_fh, WIDTH);
 		cvNamedWindow( flip_h, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-		cvMoveWindow(flip_h, 300,100);
+		cvMoveWindow(flip_h, 400,100);
 		cvShowImage( flip_h, fh_img8u );                   // Show our image inside it.
 
 		//show vertically flipped image
 		IplImage* fv_img8u = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(fv_img8u, u8_fv, WIDTH);
 		cvNamedWindow( flip_v, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-		cvMoveWindow(flip_v, 300, 700);
+		cvMoveWindow(flip_v,100, 400);
 		cvShowImage( flip_v, fv_img8u );                   // Show our image inside it.
 
 		//write flipped file
