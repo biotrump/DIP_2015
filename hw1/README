@@ -9,8 +9,26 @@
 # GUI: opencv 2.4.x with QT5
 # make file : CMakeLists.txt
 # ================================================
-# How to Build ?
+# 1. package installation
 # ================================================
+# cmake installation
+# ----------------------------------------------------------------------
+# %sudo apt-get install cmake
+# ----------------------------------------------------------------------
+# opencv installation
+# ----------------------------------------------------------------------
+# %sudo apt-get install libcv-dev libopencv-dev libhighgui-dev
+# %curl http://mirrors.kernel.org/ubuntu/pool/universe/o/opencv/libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb > libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb
+# %sudo dpkg -i libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb
+# ----------------------------------------------------------------------
+# qt5 installation
+# ----------------------------------------------------------------------
+# %sudo apt-get install qt5-default qt5-qmake qt5-image-formats-plugins
+# ================================================
+# 2. How to Build ?
+# ================================================
+# %tar xf hw1.tar
+# %cd hw1
 # %./hw1.sh
 # or manually
 # %mkdir -p build
@@ -18,7 +36,7 @@
 # %cmake ..
 # %make
 # ================================================
-# How to Run?
+# 3. How to Run?
 # ================================================
 # 0. How to show a raw file by 256x256?
 # %./build/bin/raw_show path/to/raw_file
