@@ -39,7 +39,7 @@
 # 3. How to Run?
 # ================================================
 # 0. How to show a raw file by 256x256?
-# %./build/bin/raw_show path/to/raw_file
+# %./bin/bin/raw_show path/to/raw_file
 # ----------------------------------------------------------------------
 # 1. flip the raw file,sample1.raw, vertically and horizontally 
 # and output flipped files are "I_h.raw" and "I_v.raw".
@@ -50,7 +50,6 @@
 # ----------------------------------------------------------------------
 # PROBLEM 1: IMAGE ENHANCEMENT
 # ----------------------------------------------------------------------
-# %./build/bin/p1 -I path/to/sample1.raw -D path/to/sample2.raw
 # ----------------------------------------------------------------------
 # PROBLEM 2: NOISE REMOVAL
 # ----------------------------------------------------------------------

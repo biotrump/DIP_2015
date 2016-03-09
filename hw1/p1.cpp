@@ -30,7 +30,7 @@ const char org_display[]="Original Display";
 const char flip_v[]="vertically flipped";
 const char flip_h[]="horizontally flipped";
 
-char raw_fileD[1024]="sample2.raw";
+char raw_win_nameD[1024]="sample2.raw";
 char raw_fileI[1024]="sample1.raw";
 
 static void usage(FILE *fp, int argc, char **argv)
@@ -74,8 +74,8 @@ static int option(int argc, char **argv)
 			break;
 		case 'D':
 			errno = 0;
-			strncpy(raw_fileD, optarg, 1024);
-			printf("%s\n", raw_fileD);
+			strncpy(raw_win_nameD, optarg, 1024);
+			printf("%s\n", raw_win_nameD);
 			if (errno){
 				r=-1;
 			}
@@ -176,7 +176,7 @@ void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx=30
  * name : name of window to show
  */
 void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table, int h_size,  
-			 uint8_t *histeq_map, string &name, int cdfX, int cdfY)
+			 uint8_t *histeq_map, string &name)
 {
 	unsigned cdf_table[MAX_GREY_LEVEL], cdf=0;
 	//calculate CDF without normalization from 0 to 1.0, but in 0 to pixels
@@ -188,7 +188,7 @@ void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table, int h
 	}
 	//draw cdf
 	string t_name("cdf ");
-	draw_hist(cdf_table, h_size, t_name+name, cdfX, cdfY);
+	draw_hist(cdf_table, h_size, t_name+name/*, int wx=300, int wy=300*/);
 
 	//histogram equlization
 	for(int i = 0; i < pixels ; i++)
@@ -216,7 +216,7 @@ int main( int argc, char** argv )
 	}
 
 	//opening file I and file D
-	printf("I:%s\nD:%s\n", raw_fileI, raw_fileD);
+	printf("I:%s\nD:%s\n", raw_fileI, raw_win_nameD);
 	uint8_t *bufI=NULL, *bufD=NULL, *bufH=NULL, *bufL=NULL;
 	if( (fd = open(raw_fileI, O_RDONLY)) != -1 ){
 		bufI= (uint8_t *)malloc( WIDTH * HEIGHT);
@@ -228,80 +228,79 @@ int main( int argc, char** argv )
 		exit(EXIT_FAILURE);
 	}
 	
-	if( (fd = open(raw_fileD, O_RDONLY)) != -1 ){
+	if( (fd = open(raw_win_nameD, O_RDONLY)) != -1 ){
 		bufD= (uint8_t *)malloc( WIDTH * HEIGHT);
 		ssize_t s=read(fd, bufD, WIDTH * HEIGHT);
 		close(fd);
 		cout << "request size = " << WIDTH * HEIGHT << ", read size=" << s << endl;
 	}else{
-		cout << raw_fileD << " opening failure!:"<< errno << endl;
+		cout << raw_win_nameD << " opening failure!:"<< errno << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	//load raw file I
-	string folder, fileI, fileD;
+	string folder, fileI, win_nameD;
 	SplitFilename (raw_fileI, folder, fileI);
 	IplImage* org_imgI = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	cvSetData(org_imgI, bufI, WIDTH);
 	//show the raw image I
 	namedWindow( fileI, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow(fileI, 0,0);
+	moveWindow(fileI, 100,100);
 	cvShowImage( fileI.c_str(), org_imgI );                   // Show our image inside it.
 
-	//show histogram of I
+	//show histogram I
 	unsigned hist_tableI[MAX_GREY_LEVEL];
 	uint8_t histeq_mapI[MAX_GREY_LEVEL];
 	hist(hist_tableI, MAX_GREY_LEVEL, bufI, WIDTH, HEIGHT);
-	draw_hist(hist_tableI, MAX_GREY_LEVEL, fileI, 260, 0);
+	draw_hist(hist_tableI, MAX_GREY_LEVEL, fileI, 250, 250);
 
-	//histogram equlization to I
+	//histogram equlization II
 	uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
 	hist_eq(bufI, bufII,  WIDTH * HEIGHT, hist_tableI, MAX_GREY_LEVEL,
-			histeq_mapI, fileI, 260, 310);
+			histeq_mapI, fileI);
 
-	//show histogram equlization image as II
+	//show image II
 	IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	cvSetData(imgII, bufII, WIDTH);
 	namedWindow( fileI + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow( fileI + "Hist eq", 0, 310);
+	moveWindow( fileI + "Hist eq", 250,250);
 	string fileII = fileI + "Hist eq";
 	char win_hname[100];
 	strcpy(win_hname, fileII.c_str());
-	moveWindow(win_hname, 0, 310);
 	cvShowImage( win_hname, imgII );                   // Show our image inside it.
 	
 	//load raw file D
-	SplitFilename (raw_fileD, folder, fileD);
+	SplitFilename (raw_win_nameD, folder, win_nameD);
 	IplImage* org_imgD = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	cvSetData(org_imgD, bufD, WIDTH);
 	//show the Original image
-	namedWindow( fileD, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow(fileD, 840,0);
-	cvShowImage( fileD.c_str(), org_imgD );                   // Show our image inside it.
+	namedWindow( win_nameD, CV_WINDOW_AUTOSIZE );	// Create a window for display.
+	moveWindow(win_nameD, 250,250);
+	cvShowImage( win_nameD.c_str(), org_imgD );                   // Show our image inside it.
 
-	//show histogram of D
+	//show histogram D
 	unsigned hist_tableD[MAX_GREY_LEVEL];
 	uint8_t histeq_mapH[MAX_GREY_LEVEL];
 	hist(hist_tableD, MAX_GREY_LEVEL, bufD, WIDTH, HEIGHT);
-	draw_hist(hist_tableD, MAX_GREY_LEVEL, fileD, 580,0);
+	draw_hist(hist_tableD, MAX_GREY_LEVEL, win_nameD, 350,250);
 
 	//histogram equlization D
 	bufH= (uint8_t *)malloc( WIDTH * HEIGHT);
 	hist_eq(bufD, bufH,  WIDTH * HEIGHT, hist_tableD, MAX_GREY_LEVEL,
-			histeq_mapH, fileD, 580, 310);
+			histeq_mapH, win_nameD);
 
-	//show histogram equlization image H
+	//show image H
 	IplImage* imgH = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	cvSetData(imgH, bufH, WIDTH);
-	string fileH =  fileD + "Hist eq";
-	namedWindow( fileH, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow( fileH, 1100, 0);
-	strcpy(win_hname, fileH.c_str());
+	string win_nameH =  win_nameD + "Hist eq";
+	namedWindow( win_nameH, CV_WINDOW_AUTOSIZE );	// Create a window for display.
+	moveWindow( win_nameH, 250,250);
+	strcpy(win_hname, win_nameH.c_str());
 	cvShowImage( win_hname, imgH );                   // Show our image inside it.
-	//show histogram of H
+	//show histogram H
 	unsigned hist_tableH[MAX_GREY_LEVEL];
 	hist(hist_tableH, MAX_GREY_LEVEL, bufH, WIDTH, HEIGHT);
-	draw_hist(hist_tableH, MAX_GREY_LEVEL, fileH,1100,310);
+	draw_hist(hist_tableH, MAX_GREY_LEVEL, win_nameH, 350,250);
 
 	//create output file H
 	if( (fd = open("H.raw", O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
@@ -319,7 +318,7 @@ int main( int argc, char** argv )
 	cvReleaseImageHeader(&org_imgI);
 	free(bufI);
 
-	cvDestroyWindow(fileD.c_str());
+	cvDestroyWindow(win_nameD.c_str());
 	cvReleaseImageHeader(&org_imgD);
 	free(bufD);
 
@@ -327,7 +326,7 @@ int main( int argc, char** argv )
 	cvReleaseImageHeader(&imgII);
 	free(bufII);
 
-	destroyWindow(fileH);
+	destroyWindow(win_nameH);
 	cvReleaseImageHeader(&imgH);
 	free(bufH);
 	
