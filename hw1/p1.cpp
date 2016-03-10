@@ -95,39 +95,6 @@ static int option(int argc, char **argv)
 	return r;
 }
 
-/** @brief Draw the histograms
- * input 
- * hist_table[] : histogram table 
- * h_size : level of histogram table, ie, 256 grey levels
- */
-void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx=300, int wy=300)
-{
-	float ht[MAX_GREY_LEVEL];
-	for(int i = 0; i < h_size; i ++)
-		ht[i] = hist_table[i];
-	//create a openCV matrix from an array : 1xh_size, floating point array
-	Mat b_hist=Mat(1, h_size, CV_32FC1, ht);
-	//calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-
-	int hist_w = HIST_WIN_WIDTH, hist_h = HIST_WIN_HEIGHT;
-	int bin_w = cvRound( (double) hist_w/h_size );
-
-	Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
-	
-	// Normalize the result to [ 0, histImage.rows ]
-	normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-	for( int i = 1; i < h_size; i++ )
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
-                     Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
-                     Scalar( 255, 0, 0), 2, 8, 0  );
-	string win_name("Histogram: ");
-	win_name = win_name + t_name;
-
-	namedWindow(win_name, CV_WINDOW_AUTOSIZE );
-	moveWindow(win_name, wx,wy);
-	imshow(win_name, histImage );
-}
-
 /**
  *
  */

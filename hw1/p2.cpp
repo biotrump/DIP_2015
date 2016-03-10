@@ -112,7 +112,11 @@ static int option(int argc, char **argv)
 
 void p2a(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
 {
-	//median(src, dst, width, height, dim);
+	median(src, dst, width, height, dim);
+}
+
+void p2b(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
+{
 	mean(src, dst, width, height, dim);
 }
 
@@ -160,18 +164,78 @@ int main( int argc, char** argv )
 	moveWindow(winRaw, 0,0);
 	cvShowImage( winRaw.c_str(), imgRaw );                   // Show our image inside it.
 
-	uint8_t *bufMedian= (uint8_t *)malloc( WIDTH * HEIGHT);
-	p2a(bufRaw, bufMedian, WIDTH, HEIGHT, mask_dim);
+	//Problem solution
+	IplImage* imgP2 = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	IplImage* imgP2D = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	string winP2="P", winP2D="P";
+	uint8_t *buf_work=NULL, *buf_diff=NULL;
+	buf_work= (uint8_t *)malloc( WIDTH * HEIGHT);
+	buf_diff= (uint8_t *)malloc( WIDTH * HEIGHT);
 
-	string winMedian;
-	IplImage* imgMedia = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(imgMedia, bufMedian, WIDTH);
-	//show the median filtered image
-	winMedian = winRaw+" median";
-	namedWindow( winMedian, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winMedian, 300,0);
-	cvShowImage( winMedian.c_str(), imgMedia );                   // Show our image inside it.
+	if( strcmp(problem, "2a") == 0){
+		//Problem 2a : median filter
+		p2a(bufRaw, buf_work, WIDTH, HEIGHT, mask_dim);
 
+		cvSetData(imgP2, buf_work, WIDTH);
+		//show the median filtered image
+		char temp[100];
+		sprintf(temp, "%s%s median :%dx%d", winP2.c_str(), problem, mask_dim, mask_dim);
+		winP2 = temp;
+		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+		moveWindow(winP2, 300,0);
+		cvShowImage( winP2.c_str(), imgP2 );                   // Show our image inside it.
+		
+	}else if(strcmp(problem, "2b") == 0){
+		//Problem 2b : mean filter
+		p2a(bufRaw, buf_work, WIDTH, HEIGHT, mask_dim);
+
+		cvSetData(imgP2, buf_work, WIDTH);
+		//show the median filtered image
+		char temp[100];
+		sprintf(temp, "%s%s mean :%dx%d", winP2.c_str(), problem, mask_dim, mask_dim);
+		winP2 = temp;
+		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+		moveWindow(winP2, 300,0);
+		cvShowImage( winP2.c_str(), imgP2 );                   // Show our image inside it.
+	}
+	//diff src and filtered image
+	img_diff(bufRaw, buf_work, buf_diff, WIDTH, HEIGHT);
+	cvSetData(imgP2D, buf_diff, WIDTH);
+	//show the diff image
+	winP2D = (winP2D + problem) + " diff";
+	namedWindow( winP2D, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow(winP2D, 300,0);
+	cvShowImage( winP2D.c_str(), imgP2D);                   // Show our image inside it.
+	
+	//////////////////////////////////////////
+	//bonus
+	//show histogram of image
+	unsigned hist_tableI[MAX_GREY_LEVEL];
+	uint8_t histeq_mapI[MAX_GREY_LEVEL];
+	hist(hist_tableI, MAX_GREY_LEVEL, buf_work, WIDTH, HEIGHT);
+	draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 250, 250);
+
+	//histogram equlization of Image
+	uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
+	unsigned cdf_table[MAX_GREY_LEVEL];
+	hist_eq(buf_work, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
+			MAX_GREY_LEVEL,	histeq_mapI, winP2);
+
+	//show cdf of image I
+	string t_name(winP2 + " cdf ");
+	draw_hist(cdf_table, MAX_GREY_LEVEL, t_name/*, int wx=300, int wy=300*/);
+	
+	//show the image II, the histogram equlization of Image I
+	IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	cvSetData(imgII, bufII, WIDTH);
+	namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
+	moveWindow( winP2 + "Hist eq", 250,250);
+	string winP2I = winP2 + "Hist eq";
+	char win_hname[100];
+	strcpy(win_hname, winP2I.c_str());
+	cvShowImage( win_hname, imgII );                   // Show our image inside it.
+
+	
 /*
 
 	//create output file H
@@ -190,9 +254,14 @@ int main( int argc, char** argv )
 	destroyWindow(winRaw);
 	cvReleaseImageHeader(&imgRaw);
 	free(bufRaw);
+	
+	destroyWindow(winP2);
+	cvReleaseImageHeader(&imgP2);
+	free(buf_work);
 
-	destroyWindow(winMedian);
-	cvReleaseImageHeader(&imgMedia);
-	free(bufMedian);
+	destroyWindow(winP2D);
+	cvReleaseImageHeader(&imgP2D);
+	free(buf_diff);
+
     return 0;
 }

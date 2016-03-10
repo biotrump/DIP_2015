@@ -34,6 +34,7 @@ void SplitFilename (const string& str, string &folder, string &file);
  */
 uint8_t *expand_border(uint8_t *src, int width, int height, int pad);
 
+void img_diff(uint8_t *s1, uint8_t *s2, uint8_t *diff, int width, int height);
 /** @brif media filter
  * dim : dim x dim mask kernel
  *
@@ -68,4 +69,11 @@ int hist(unsigned *hist_table, int h_size, uint8_t *image, int width, int height
  */
 void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
 			 unsigned *cdf_table, int h_size, uint8_t *histeq_map, string &name);
+
+/** @brief Draw the histograms
+ * input 
+ * hist_table[] : histogram table 
+ * h_size : level of histogram table, ie, 256 grey levels
+ */
+void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx=300, int wy=300);
 #endif	//_H_DIP_LIB_H

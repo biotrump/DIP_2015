@@ -13,7 +13,7 @@ message("DIP_HW_SOURCE_DIR : ${DIP_HW_SOURCE_DIR}")
 message("DIP_HW_BINARY_DIR : ${DIP_HW_BINARY_DIR}")
 
 #equivalent to  "cmake -DCMAKE_BUILD_TYPE=Release"
-set(CMAKE_BUILD_TYPE "Debug")
+#set(CMAKE_BUILD_TYPE "Debug")
 #set(CMAKE_BUILD_TYPE "Release")
 message("***CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 # --------------------------------------------------
@@ -59,6 +59,9 @@ include_directories(${Qt5Widgets_INCLUDES})
 
 # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
 add_definitions(${Qt5Widgets_DEFINITIONS})
+
+find_package(Qt5Core)
+get_target_property(QtCore_location Qt5::Core LOCATION)
 
 # Executables fail to build with Qt 5 in the default configuration
 # without -fPIE. We add that here.
@@ -170,5 +173,16 @@ add_executable(p2
 )
 qt5_use_modules(p2 Widgets  OpenGL Test Concurrent)
 target_link_libraries(p2
+	${OpenCV_LIBS}
+)
+# --------------------------------------------------
+# PROBLEM 2: NOISE REMOVAL
+# --------------------------------------------------
+add_executable(bonus
+	dip-lib.cpp
+	bonus.cpp
+)
+qt5_use_modules(bonus Widgets  OpenGL Test Concurrent)
+target_link_libraries(bonus
 	${OpenCV_LIBS}
 )

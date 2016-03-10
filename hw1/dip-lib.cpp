@@ -81,11 +81,23 @@ uint8_t *expand_by_pad(uint8_t *src, int width, int height, int pad)
 	IplImage* imgMedia = cvCreateImageHeader(cvSize(pw, ph), IPL_DEPTH_8U, 1);
 	cvSetData(imgMedia, pad_buf, pw);
 	//show the median filtered image
-	namedWindow( "pad", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("pad", 0,300);
-	cvShowImage( "pad", imgMedia );                   // Show our image inside it.
+	namedWindow("expanding border", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("expanding border", 0,300);
+	cvShowImage( "expanding border", imgMedia );                   // Show our image inside it.
 
 	return pad_buf;
+}
+
+void img_diff(uint8_t *s1, uint8_t *s2, uint8_t *diff, int width, int height)
+{
+	for(int y = 0 ; y < height; y++)
+		for(int x = 0 ; x < width;x++){
+			int d = s1[x+y*width] - s2[x+y*width];
+			if(d*d > 100)
+				diff[x+y*width]= 255;
+			else 
+				diff[x+y*width]= 0;
+		}
 }
 
 /** @brif media filter
@@ -169,9 +181,11 @@ int hist(unsigned *hist_table, int h_size, uint8_t *image, int width, int height
 		//printf("0x%x ", image[i]);
 		hist_table[image[i]]++;
 	}
+#ifdef DEBUG
 	for(int i = 0 ; i < MAX_GREY_LEVEL;i++){
 		printf("%3d: %u\n", i, hist_table[i]);
 	}
+#endif
 }
 
 /** histogram equlization
@@ -195,7 +209,7 @@ void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
 		cdf += hist_table[i];
 		cdf_table[i] = cdf;
 		histeq_map[i] = (255 * cdf)  / pixels ;//mapping grey level i to new grey level
-		printf("%d->%d\n", i, histeq_map[i]);
+		//printf("%d->%d\n", i, histeq_map[i]);
 	}
 
 	//histogram equlization
@@ -213,4 +227,37 @@ void SplitFilename (const string& str, string &folder, string &file)
 	file = str.substr(found+1);
 	cout << " folder: " << str.substr(0,found) << endl;
 	cout << " file: " << str.substr(found+1) << endl;
+}
+
+/** @brief Draw the histograms
+ * input 
+ * hist_table[] : histogram table 
+ * h_size : level of histogram table, ie, 256 grey levels
+ */
+void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx, int wy)
+{
+	float ht[MAX_GREY_LEVEL];
+	for(int i = 0; i < h_size; i ++)
+		ht[i] = hist_table[i];
+	//create a openCV matrix from an array : 1xh_size, floating point array
+	Mat b_hist=Mat(1, h_size, CV_32FC1, ht);
+	//calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
+
+	int hist_w = HIST_WIN_WIDTH, hist_h = HIST_WIN_HEIGHT;
+	int bin_w = cvRound( (double) hist_w/h_size );
+
+	Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
+	
+	// Normalize the result to [ 0, histImage.rows ]
+	normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+	for( int i = 1; i < h_size; i++ )
+		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
+                     Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
+                     Scalar( 255, 0, 0), 2, 8, 0  );
+	string win_name("Histogram: ");
+	win_name = win_name + t_name;
+
+	namedWindow(win_name, CV_WINDOW_AUTOSIZE );
+	moveWindow(win_name, wx,wy);
+	imshow(win_name, histImage );
 }
