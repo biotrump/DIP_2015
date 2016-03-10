@@ -17,17 +17,10 @@
 #include <string>
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
-
-#define	WIDTH	(256)
-#define	HEIGHT	(256)
-
-#define	HIST_WIN_WIDTH 	(256)
-#define	HIST_WIN_HEIGHT	(256)
-
-#define	MAX_GREY_LEVEL	(1<<8)
-
 using namespace cv;
 using namespace std;
+
+#include "dip.h"
 
 const char org_display[]="Original Display";
 const char flip_v[]="vertically flipped";
@@ -115,133 +108,6 @@ static int option(int argc, char **argv)
 	}
 	//printf("-%s:%d\n",__func__, r);
 	return r;
-}
-
-//http://stackoverflow.com/questions/3071665/getting-a-directory-name-from-a-filename
-void SplitFilename (const string& str, string &folder, string &file)
-{
-	size_t found;
-	cout << "Splitting: " << str << endl;
-	found=str.find_last_of("/\\");
-	folder = str.substr(0,found);
-	file = str.substr(found+1);
-	cout << " folder: " << str.substr(0,found) << endl;
-	cout << " file: " << str.substr(found+1) << endl;
-}
-
-/** @brief expanding src image to a new image by padding some rows and columns
- * around the border.
- *
- */
-uint8_t *expand_by_pad(uint8_t *src, int width, int height, int pad)
-{
-	assert(src);
-
-	int pw=width + 2*pad;
-	int ph=height + 2*pad;
-	uint8_t *pad_buf=(uint8_t *)malloc( pw * ph);
-	memset(pad_buf, 0, pw * ph);
-
-	//padding row border
-	for(int y = 1; y <= pad ; y++)
-		for(int x = 0; x < width;x++){
-			//padding upper row border
-			pad_buf[x+pad + (pad-y) * pw]=src[x + y * width];
-			//padding lower row border
-			pad_buf[x+pad + (height-1+y+pad) * pw]=src[x + (height -1 - y) * width];
-		}
-	//padding column borders
-	for(int y = 0; y < height ; y++)
-		for(int x = 1; x <= pad;x++){
-			//padding left column border
-			pad_buf[pad-x + (pad+y)*pw]=src[x + y * width];
-			//padding right column border
-			pad_buf[width - 1 + x + pad + (pad + y ) * pw]=src[width -1 - x + y * width];
-		}
-
-	//copy source buffer to working buffer
-	for(int y = 0 ; y < height; y++)
-		for(int x= 0 ; x < width ;x++)
-			pad_buf[ x+pad +(y+pad)*pw]=src[x+y*width];
-
-	//show the padded image
-	IplImage* imgMedia = cvCreateImageHeader(cvSize(pw, ph), IPL_DEPTH_8U, 1);
-	cvSetData(imgMedia, pad_buf, pw);
-	//show the median filtered image
-	namedWindow( "pad", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("pad", 0,300);
-	cvShowImage( "pad", imgMedia );                   // Show our image inside it.
-
-	return pad_buf;
-}
-
-/** @brif media filter
- * dim : dim x dim mask kernel
- *
- */
-void median(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
-{
-	//padding border
-	uint8_t window[dim*dim];
-	int pad = (dim / 2);
-	uint8_t *pad_buf=NULL;
-	//expand source image by padding borders
-	pad_buf = expand_by_pad(src, width, height, pad);
-
-	for(int y = pad;  y < (height+pad); y++)
-       for(int x = pad ; x < (width+pad); x++){
-           int i = 0;
-           for(int fx = 0; fx < dim;fx++)
-               for(int fy = 0; fy < dim; fy++){
-                   window[i++] = pad_buf[(x + fx - pad) + (y + fy - pad)*(width + 2*pad)];
-//				   printf("[%d]=%d ", i-1, window[i-1]);
-			   }
-			//sorting window
-			std::vector<uint8_t> myvector (window, window+dim*dim);
-			// using default comparison (operator <):
-			std::sort (myvector.begin(), myvector.end());
-//			for(int i=0;i<dim*dim;i++)
-//				printf("[%d]=%d ", i, myvector[i]);
-//			printf("\nm=%d\n", myvector[ (dim * dim) / 2]);
-//			cout << endl;
-			//using the median element in the sorting list
-			dst[(y-pad)*width+(x-pad)] = myvector[ (dim * dim) / 2];
-	   }
-
-	 free(pad_buf);
-}
-
-/** @brif media filter
- * dim : dim x dim mask kernel
- *
- */
-void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
-{
-	//padding border
-	uint8_t window[dim*dim];
-	int pad = (dim / 2);
-	uint8_t *pad_buf=NULL;
-	//expand source image by padding borders
-	pad_buf = expand_by_pad(src, width, height, pad);
-
-	for(int fx = 0; fx < dim;fx++)
-		for(int fy = 0; fy < dim; fy++){
-			window[fx + fy * dim] = 1;
-        }
-
-	for(int y = pad;  y < (height+pad); y++)
-       for(int x = pad ; x < (width+pad); x++){
-		   unsigned sum=0;
-           for(int fx = 0; fx < dim;fx++)
-               for(int fy = 0; fy < dim; fy++){
-                   sum += window[fx + fy*dim] * pad_buf[(x + fx - pad) + (y + fy - pad)*(width + 2*pad)];
-			   }
-			sum /= dim*dim;
-			//using the median element in the sorting list
-			dst[(y-pad)*width+(x-pad)] = sum;
-	   }
-
-	 free(pad_buf);
 }
 
 void p2a(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)

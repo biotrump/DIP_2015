@@ -38,7 +38,7 @@ int main( int argc, char** argv )
 		cvSetData(org_img8u, u8, WIDTH);
 
 		//show the Original image
-		cvNamedWindow( org_display, CV_WINDOW_AUTOSIZE );	// Create a window for display.
+		cvNamedWindow( org_display, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
 		cvMoveWindow(org_display, 100,100);
 		cvShowImage( org_display, org_img8u );                   // Show our image inside it.
 

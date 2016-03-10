@@ -153,6 +153,7 @@ target_link_libraries(flip
 # PROBLEM 1: IMAGE ENHANCEMENT
 # --------------------------------------------------
 add_executable(p1
+	dip-lib.cpp
 	p1.cpp
 )
 qt5_use_modules(p1 Widgets  OpenGL Test Concurrent)
@@ -163,6 +164,7 @@ target_link_libraries(p1
 # PROBLEM 2: NOISE REMOVAL
 # --------------------------------------------------
 add_executable(p2
+	dip-lib.cpp
 	p2.cpp
 )
 qt5_use_modules(p2 Widgets  OpenGL Test Concurrent)
