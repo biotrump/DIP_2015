@@ -4,6 +4,10 @@
  */
 #ifndef _H_DIP_LIB_H
 #define	_H_DIP_LIB_H
+#include <iostream>
+#include <string>
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
 
 #define	MAX_GREY_LEVEL	(1<<8)
 
@@ -12,6 +16,13 @@
 
 #define	HIST_WIN_WIDTH 	(256)
 #define	HIST_WIN_HEIGHT	(256)
+
+/** @brief flipping the image
+ * org : input
+ * flipped : output
+ * fv : 'v' for vertically, otherwise for horizontally
+ */
+int flip(uint8_t *org, uint8_t *flipped, char fv);
 
 //http://stackoverflow.com/questions/3071665/getting-a-directory-name-from-a-filename
 //split path string to substring folder and file

@@ -143,6 +143,7 @@ target_link_libraries(raw_show
 # To flip a rawfile
 # --------------------------------------------------
 add_executable(flip
+	dip-lib.cpp
 	flip.cpp
 )
 qt5_use_modules(flip Widgets  OpenGL Test Concurrent)

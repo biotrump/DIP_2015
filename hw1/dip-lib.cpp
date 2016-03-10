@@ -23,6 +23,25 @@ using namespace std;
 
 #include "dip.h"
 
+/** @brief flipping the image
+ * org : input
+ * flipped : output
+ * fv : 'v' for vertically, otherwise for horizontally
+ */
+int flip(uint8_t *org, uint8_t *flipped, char fv)
+{
+	if(fv == 'v'){//vertically
+		for(int i = 0 ; i < HEIGHT ; i ++)
+			for(int j = 0 ; j < WIDTH ; j ++)
+				flipped[(HEIGHT -1 - i) * WIDTH + j]=org[ i * WIDTH + j];
+	}else{//swap 
+		for(int i = 0 ; i < HEIGHT ; i ++)
+			for(int j = 0 ; j < WIDTH ; j ++)
+				flipped[i * WIDTH + j]=org[ i * WIDTH + (WIDTH - 1 - j)];
+	}
+	return 0;
+}
+
 /** @brief expanding src image to a new image by padding some rows and columns
  * around the border.
  *

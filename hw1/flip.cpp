@@ -18,28 +18,11 @@
 using namespace cv;
 using namespace std;
 
+#include "dip.h"
+
 const char org_display[]="Original Display";
 const char flip_v[]="vertically flipped";
 const char flip_h[]="horizontally flipped";
-
-/** @brief flipping the image
- * org : input
- * flipped : output
- * fv : 'v' for vertically, otherwise for horizontally
- */
-int flip(uint8_t *org, uint8_t *flipped, char fv)
-{
-	if(fv == 'v'){//vertically
-		for(int i = 0 ; i < HEIGHT ; i ++)
-			for(int j = 0 ; j < WIDTH ; j ++)
-				flipped[(HEIGHT -1 - i) * WIDTH + j]=org[ i * WIDTH + j];
-	}else{//swap 
-		for(int i = 0 ; i < HEIGHT ; i ++)
-			for(int j = 0 ; j < WIDTH ; j ++)
-				flipped[i * WIDTH + j]=org[ i * WIDTH + (WIDTH - 1 - j)];
-	}
-	return 0;
-}
 
 /**
  * flip raw_file
@@ -62,7 +45,7 @@ int main( int argc, char** argv )
 		cvSetData(org_img8u, u8, WIDTH);
 
 		//show the Original image
-		cvNamedWindow( org_display, CV_WINDOW_AUTOSIZE );	// Create a window for display.
+		cvNamedWindow( org_display, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
 		cvMoveWindow(org_display, 100,100);
 		cvShowImage( org_display, org_img8u );                   // Show our image inside it.
 
@@ -75,14 +58,14 @@ int main( int argc, char** argv )
 		//show horizontally flipped image
 		IplImage* fh_img8u = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(fh_img8u, u8_fh, WIDTH);
-		cvNamedWindow( flip_h, CV_WINDOW_AUTOSIZE );	// Create a window for display.
+		cvNamedWindow( flip_h, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
 		cvMoveWindow(flip_h, 400,100);
 		cvShowImage( flip_h, fh_img8u );                   // Show our image inside it.
 
 		//show vertically flipped image
 		IplImage* fv_img8u = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(fv_img8u, u8_fv, WIDTH);
-		cvNamedWindow( flip_v, CV_WINDOW_AUTOSIZE );	// Create a window for display.
+		cvNamedWindow( flip_v, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
 		cvMoveWindow(flip_v,100, 400);
 		cvShowImage( flip_v, fv_img8u );                   // Show our image inside it.
 
