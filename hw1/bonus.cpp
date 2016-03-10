@@ -178,20 +178,20 @@ void ProcessDim(int pos, void *userdata)
 		//////////////////////////////////////////
 		//bonus
 		//show histogram of image
-		unsigned hist_tableI[MAX_GREY_LEVEL];
-		uint8_t histeq_mapI[MAX_GREY_LEVEL];
-		hist(hist_tableI, MAX_GREY_LEVEL, buf_worka, WIDTH, HEIGHT);
-		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600,0+SCR_Y_OFFSET);
+		unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableI, (MAX_GREY_LEVEL+1), buf_worka, WIDTH, HEIGHT);
+		draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), winP2, 600,0+SCR_Y_OFFSET);
 
 		//histogram equlization of Image
 		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
-		unsigned cdf_table[MAX_GREY_LEVEL];
+		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
 		hist_eq(buf_worka, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-				MAX_GREY_LEVEL,	histeq_mapI, winP2);
+				(MAX_GREY_LEVEL+1),	histeq_mapI, winP2);
 
 		//show cdf of image
 		string t_name(winP2 + " cdf ");
-		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name,800,0+SCR_Y_OFFSET);
+		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name,800,0+SCR_Y_OFFSET);
 		
 		//show the image , the histogram equlization of Image I
 		IplImage* imgHE = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
@@ -230,20 +230,20 @@ void ProcessDim(int pos, void *userdata)
 		//////////////////////////////////////////
 		//bonus
 		//show histogram of image
-		unsigned hist_tableI[MAX_GREY_LEVEL];
-		uint8_t histeq_mapI[MAX_GREY_LEVEL];
-		hist(hist_tableI, MAX_GREY_LEVEL, buf_workb, WIDTH, HEIGHT);
-		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600, 300+SCR_Y_OFFSET);
+		unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableI, (MAX_GREY_LEVEL+1), buf_workb, WIDTH, HEIGHT);
+		draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), winP2, 600, 300+SCR_Y_OFFSET);
 
 		//histogram equlization of Image
 		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
-		unsigned cdf_table[MAX_GREY_LEVEL];
+		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
 		hist_eq(buf_workb, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-				MAX_GREY_LEVEL,	histeq_mapI, winP2);
+				(MAX_GREY_LEVEL+1),	histeq_mapI, winP2);
 
 		//show cdf of image
 		string t_name(winP2 + " cdf ");
-		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name, 800, 300+SCR_Y_OFFSET);
+		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name, 800, 300+SCR_Y_OFFSET);
 		
 		//show the image, the histogram equlization of Image I
 		IplImage* imgHE = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
@@ -308,20 +308,15 @@ int main( int argc, char** argv )
 		cout << raw_file << " opening failure!:"<< errno << endl;
 		exit(EXIT_FAILURE);
 	}
-
 	/////////////////////////////////////
 	//tracking bar to set dimension of kernel matrix
 	imgBar = cvCreateImage(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 3);
 	cvSetZero(imgBar);
 	cv::namedWindow(track_bar_name, WINDOW_AUTOSIZE);
-	cv::createTrackbar("dim", track_bar_name, &mask_dim, MAX_DIM, ProcessDim, 
+	cv::createTrackbar("dimension", track_bar_name, &mask_dim, MAX_DIM, ProcessDim, 
 						bufRaw);
-	//CvFont Font1=cvFont(1.5,1.0);
-	//cvPutText(imgBar, "text", cvPoint(10, 50), &Font1, CV_RGB(250,255,255));
-
 	moveWindow(track_bar_name, 1300,0+SCR_Y_OFFSET);
 	cvShowImage( track_bar_name.c_str(), imgBar);
-	//////////////////////////////////
 	
 	//load raw file
 	string folder, winRaw;

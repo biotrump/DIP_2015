@@ -25,6 +25,18 @@ using namespace std;
 
 int SCR_X_OFFSET=0, SCR_Y_OFFSET=0;
 
+//http://stackoverflow.com/questions/3071665/getting-a-directory-name-from-a-filename
+void SplitFilename (const string& str, string &folder, string &file)
+{
+	size_t found;
+	cout << "Splitting: " << str << endl;
+	found=str.find_last_of("/\\");
+	folder = str.substr(0,found);
+	file = str.substr(found+1);
+	cout << " folder: " << str.substr(0,found) << endl;
+	cout << " file: " << str.substr(found+1) << endl;
+}
+
 /** @brief flipping the image
  * org : input
  * flipped : output
@@ -48,7 +60,7 @@ int flip(uint8_t *org, uint8_t *flipped, char fv)
  * around the border.
  * pad : odd extension
  */
-uint8_t *boundary_ext(uint8_t *src, int width, int height, int pad)
+uint8_t *boundary_ext(uint8_t *src, int width, int height, int pad, const string ename)
 {
 	assert(src);
 
@@ -78,16 +90,84 @@ uint8_t *boundary_ext(uint8_t *src, int width, int height, int pad)
 	for(int y = 0 ; y < height; y++)
 		for(int x= 0 ; x < width ;x++)
 			pad_buf[ x+pad +(y+pad)*pw]=src[x+y*width];
-
+/*
 	//show the padded image
 	IplImage* imgMedia = cvCreateImageHeader(cvSize(pw, ph), IPL_DEPTH_8U, 1);
 	cvSetData(imgMedia, pad_buf, pw);
 	//show the median filtered image
-	namedWindow("expanding border", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("expanding border", 0,300+SCR_Y_OFFSET);
-	cvShowImage( "expanding border", imgMedia );                   // Show our image inside it.
-
+	namedWindow(ename, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow(ename, 1000,400+SCR_Y_OFFSET);
+	cvShowImage(ename.c_str(), imgMedia );                   // Show our image inside it.
+	cout << ename <<endl;
+	*/
 	return pad_buf;
+}
+
+/* M x N matrix
+ * impulse noise : pepper and salt noise generator
+ * black_thr : black threshold <
+ * white_thr : white threshold >
+ */
+void impulse_noise_gen(uint8_t *imp, int M, int N, uint8_t black_thr, uint8_t white_thr)
+{
+	//generate random matrix
+	int b=0,w=0;
+	srand(time(NULL));
+	memset(imp, 127, M*N);
+	printf("%s:black_thr=%u, white_thr=%u\n", __func__, black_thr,white_thr);
+	for(int i = 0; i < M*N; i++) {
+		int r =  rand()%256;//0-255
+		//printf("r=%d\n",r);
+		if(r < black_thr){
+			imp[i]=0;//black
+			b++;
+		}else if(r > white_thr){
+			imp[i] = 255;//white
+			w++;
+		}
+	}
+	printf("%s:black=%d, white=%d\n", __func__,b,w);
+}
+
+void impulse_noise_add(uint8_t *imp, uint8_t *image, int M, int N)
+{
+	for(int i = 0; i < M*N; i++) {
+		if(imp[i]==0){
+			image[i]=0;//black
+		}else if(imp[i] == 255){
+			image[i] = 255;//white
+		}
+	}
+}
+
+/* M x N matrix
+ * white noise : uniform white noise generator
+ * white_thr : white threshold >
+ */
+void white_noise_gen(uint8_t *imp, int M, int N, uint8_t white_thr)
+{
+	//generate random matrix
+	int w=0;
+	srand(time(NULL));
+	memset(imp, 0, M*N);
+	printf("%s:white_thr=%u\n", __func__, white_thr);
+	for(int i = 0; i < M*N; i++) {
+		int r =  rand()%256;//0-255
+		if(r >= white_thr){
+			imp[i] = r;//white
+			w++;
+		}
+	}
+	printf("%s: white=%d\n", __func__,w);
+}
+
+void white_noise_add(uint8_t *white, uint8_t *image, int M, int N )
+{
+	for(int i = 0; i < M*N; i++) {
+		if(white[i])
+			image[i] = 255;//white
+	}
+
 }
 
 /** @brief power 2 of the diff two images : (s1[]-s2[]) * (s1[]-s2[]) = diff[]
@@ -144,7 +224,7 @@ void median(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 	int pad = (dim / 2);
 	uint8_t *pad_buf=NULL;
 	//expand source image by padding borders
-	pad_buf = boundary_ext(src, width, height, pad);
+	pad_buf = boundary_ext(src, width, height, pad, "median");
 
 	for(int y = pad;  y < (height+pad); y++)
        for(int x = pad ; x < (width+pad); x++){
@@ -180,7 +260,7 @@ void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 	int pad = (dim / 2);
 	uint8_t *pad_buf=NULL;
 	//expand source image by padding borders
-	pad_buf = boundary_ext(src, width, height, pad);
+	pad_buf = boundary_ext(src, width, height, pad, "mean");
 
 	for(int fx = 0; fx < dim;fx++)
 		for(int fy = 0; fy < dim; fy++){
@@ -248,18 +328,6 @@ void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
 	//histogram equlization
 	for(int i = 0; i < pixels ; i++)
 		dst[i] = histeq_map[src[i]];	//mapping original grey level to new level
-}
-
-//http://stackoverflow.com/questions/3071665/getting-a-directory-name-from-a-filename
-void SplitFilename (const string& str, string &folder, string &file)
-{
-	size_t found;
-	cout << "Splitting: " << str << endl;
-	found=str.find_last_of("/\\");
-	folder = str.substr(0,found);
-	file = str.substr(found+1);
-	cout << " folder: " << str.substr(0,found) << endl;
-	cout << " file: " << str.substr(found+1) << endl;
 }
 
 /** @brief Draw the histograms

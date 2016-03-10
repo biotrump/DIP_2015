@@ -38,18 +38,20 @@ static void usage(FILE *fp, int argc, char **argv)
 		 "Options:\n"
 		 "-h | --help       Print this message\n"
 		 "-n | --dim	n	nxn mask\n"
+		 "-o | --offset	 mxn The screen offset for dual screen\n"
 		 "-p | --problem 2a The problem 2a,2b,2c... to solve\n"
 		 "-r | --raw	    The full path of the raw file \n"
 		 "",
 		 argv[0]);
 }
 
-static const char short_options[] = "hn:p:r:";
+static const char short_options[] = "hn:o:p:r:";
 
 static const struct option
 long_options[] = {
 	{ "help",   	no_argument,       NULL, 'h' },
 	{ "dim",		required_argument, NULL, 'n' },
+	{ "offset",		required_argument, NULL, 'o' },
 	{ "problem",	required_argument, NULL, 'p' },
 	{ "raw",		required_argument, NULL, 'r' },
 	{ 0, 0, 0, 0 }
@@ -78,6 +80,18 @@ static int option(int argc, char **argv)
 			printf("mask_dim=%d\n", mask_dim);
 			if (errno){
 				r=-1;
+			}
+			break;
+		case 'o':
+			if(optarg && strlen(optarg)){
+				int i=0;
+				printf("screen offset:%s\n",optarg);
+				while(optarg[i] && optarg[i] !='x') i++;
+				if(optarg[i] =='x') {
+					optarg[i]=' ';//delimeter
+					sscanf(optarg,"%d %d", &SCR_X_OFFSET, &SCR_Y_OFFSET);
+					printf("SCR_X_OFFSET=%d, SCR_Y_OFFSET=%d\n", SCR_X_OFFSET, SCR_Y_OFFSET);
+				}
 			}
 			break;
 		case 'p':
@@ -118,6 +132,137 @@ void p2a(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
 void p2b(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
 {
 	mean(src, dst, width, height, dim);
+}
+
+IplImage* imgImpAdd=NULL, *imgImpFiltered=NULL, *imgP2a=NULL;
+int black_thr=3,white_thr=252;
+void show_impulse_noise(uint8_t *imp, int width, int height)
+{
+	IplImage* imgImPulse = cvCreateImageHeader(cvSize(width, height), IPL_DEPTH_8U, 1);
+	cvSetData(imgImPulse, imp, width);
+	//show the raw image
+	namedWindow( "impulse noise", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("impulse noise", 300,0+SCR_Y_OFFSET);
+	cvShowImage( "impulse noise", imgImPulse );                   // Show our image inside it.
+}
+
+uint8_t *imp_buf=NULL, *buf_addImp=NULL, *buff_Iwork=NULL;
+void impulse_bchange(int pos, void *userdata)
+{
+	uint8_t *src=(uint8_t *)userdata;
+	black_thr=pos;
+
+	imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
+	impulse_noise_gen(imp_buf, HEIGHT, WIDTH, black_thr, white_thr);
+	show_impulse_noise(imp_buf, WIDTH, HEIGHT);
+	//add impulse noise to image
+	uint8_t *bufRaw=(uint8_t *)userdata;
+	buf_addImp= (uint8_t *)realloc(buf_addImp, WIDTH * HEIGHT);
+	memcpy(buf_addImp,bufRaw, WIDTH * HEIGHT);
+	impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
+
+	cvSetData(imgImpAdd, buf_addImp, WIDTH);
+	namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("impulse noise add", 600,0+SCR_Y_OFFSET);
+	cvShowImage("impulse noise add", imgImpAdd );                   // Show our image inside it.
+	
+	//Problem 2a : median filter
+	buff_Iwork=(uint8_t *)realloc(buff_Iwork, WIDTH * HEIGHT);
+	//median
+	p2a(buf_addImp, buff_Iwork, WIDTH, HEIGHT, mask_dim);
+	//show the median filtered image
+	cvSetData(imgP2a, buff_Iwork, WIDTH);
+	namedWindow( "median", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("median", 1000,0+SCR_Y_OFFSET);
+	cvShowImage( "median", imgP2a );                   // Show our image inside it
+}
+
+void impulse_wchange(int pos, void *userdata)
+{
+	uint8_t *src=(uint8_t *)userdata;
+	white_thr=pos;
+	imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
+	impulse_noise_gen(imp_buf, HEIGHT, WIDTH, black_thr, white_thr);
+	show_impulse_noise(imp_buf, WIDTH, HEIGHT);
+	uint8_t *bufRaw=(uint8_t *)userdata;
+	//add impulse noise to image
+	buf_addImp= (uint8_t *)realloc(buf_addImp, WIDTH * HEIGHT);
+	memcpy(buf_addImp,bufRaw, WIDTH * HEIGHT);
+	impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
+
+	cvSetData(imgImpAdd, buf_addImp, WIDTH);
+	namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("impulse noise add", 600,0+SCR_Y_OFFSET);
+	cvShowImage("impulse noise add", imgImpAdd );                   // Show our image inside it.
+
+	//Problem 2a : median filter
+	buff_Iwork=(uint8_t *)realloc(buff_Iwork, WIDTH * HEIGHT);
+	p2a(buf_addImp, buff_Iwork, WIDTH, HEIGHT, mask_dim);
+
+	cvSetData(imgP2a, buff_Iwork, WIDTH);
+	//show the median filtered image
+	namedWindow( "median", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("median", 1000,0+SCR_Y_OFFSET);
+	cvShowImage( "median", imgP2a );                   // Show our image inside it
+
+}
+
+int whiten_thr=254;
+IplImage* imgWhiteAdd=NULL, *imgWhiteFiltered=NULL, *imgP2b=NULL;
+void show_white_noise(uint8_t *white, int width, int height)
+{
+	IplImage* imgWhiteN = cvCreateImageHeader(cvSize(width, height), IPL_DEPTH_8U, 1);
+	cvSetData(imgWhiteN, white, width);
+	//show the white noise
+	namedWindow( "white noise", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("white noise", 300,300+SCR_Y_OFFSET);
+	cvShowImage( "white noise", imgWhiteN );                   // Show our image inside it.
+}
+
+uint8_t *white_buf=NULL, *buf_addWhite= NULL, *buff_wwork=NULL;
+void whiten_wchange(int pos, void *userdata)
+{
+	white_buf=(uint8_t *)realloc(white_buf, WIDTH * HEIGHT);
+	whiten_thr=pos;
+	white_noise_gen(white_buf, HEIGHT, WIDTH, whiten_thr);
+	show_white_noise(white_buf, WIDTH, HEIGHT);
+
+	//add white noise to image
+	uint8_t *bufRaw=(uint8_t *)userdata;
+	buf_addWhite= (uint8_t *)realloc(buf_addWhite, WIDTH * HEIGHT);
+	memcpy(buf_addWhite,bufRaw, WIDTH * HEIGHT);
+
+	//adding noise to image I
+	white_noise_add(white_buf, buf_addWhite, HEIGHT, WIDTH);
+
+	cvSetData(imgWhiteAdd, buf_addWhite, WIDTH);
+	namedWindow("white noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("white noise add", 600,300+SCR_Y_OFFSET);
+	cvShowImage("white noise add", imgWhiteAdd );                   // Show our image inside it.
+
+	//Problem 2b : mean filter
+	buff_wwork=(uint8_t *)realloc(buff_wwork, WIDTH * HEIGHT);
+	//mean filter
+	p2b(buf_addWhite, buff_wwork, WIDTH, HEIGHT, mask_dim);
+	//show it
+	cvSetData(imgP2b, buff_wwork, WIDTH);
+	namedWindow( "mean", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	moveWindow("mean", 1000,300+SCR_Y_OFFSET);
+	cvShowImage( "mean", imgP2b );                   // Show our image inside it.
+}
+
+IplImage *imgBar=NULL;
+void ProcessDim(int pos, void *userdata)
+{
+	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	if(pos < 3 ) {
+		pos=3;
+	}
+	if((pos%2)==0) {
+		pos--;//only odd dim is allowed!
+	}
+	mask_dim = pos;
+	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
 }
 
 /**
@@ -164,77 +309,45 @@ int main( int argc, char** argv )
 	moveWindow(winRaw, 0,0);
 	cvShowImage( winRaw.c_str(), imgRaw );                   // Show our image inside it.
 
-	//Problem solution
-	IplImage* imgP2 = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	IplImage* imgP2D = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	////////////////////////////////////////////
+	//GUI preparation
+	imgImpAdd = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgImpFiltered= cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgWhiteAdd = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgWhiteFiltered = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgP2a = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgP2b = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+
+	//imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
+	//show_impulse_noise(imp_buf, WIDTH, HEIGHT);
+	cv::namedWindow("noise_tune", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
+	imgBar = cvCreateImage(cvSize(512, 512), IPL_DEPTH_8U, 3);
+	cvSetZero(imgBar);
+	cv::createTrackbar("dimension", "noise_tune", &mask_dim, MAX_DIM, ProcessDim, 
+						bufRaw);
+	cv::createTrackbar("imp black threshold <", "noise_tune", &black_thr, MAX_GREY_LEVEL, 
+					   impulse_bchange, bufRaw);
+	cv::createTrackbar("imp white threshold >", "noise_tune", &white_thr, MAX_GREY_LEVEL, 
+					   impulse_wchange, bufRaw);
+	//white_buf=(uint8_t *)realloc(white_buf, WIDTH * HEIGHT);
+	//show_white_noise(white_buf, WIDTH, HEIGHT);
+	cv::createTrackbar("white noise threshold >", "noise_tune", &white_thr, MAX_GREY_LEVEL, 
+					   whiten_wchange, bufRaw);
+	moveWindow("noise_tune", 1300,300+SCR_Y_OFFSET);
+	cvShowImage( "noise_tune", imgBar);
+	////////////////////////////////////////////
+
 	string winP2="P", winP2D="P";
-	uint8_t *buf_work=NULL, *buf_diff=NULL;
-	buf_work= (uint8_t *)malloc( WIDTH * HEIGHT);
-	buf_diff= (uint8_t *)malloc( WIDTH * HEIGHT);
-
-	if( strcmp(problem, "2a") == 0){
-		//Problem 2a : median filter
-		p2a(bufRaw, buf_work, WIDTH, HEIGHT, mask_dim);
-
-		cvSetData(imgP2, buf_work, WIDTH);
-		//show the median filtered image
-		char temp[100];
-		sprintf(temp, "%s%s median :%dx%d", winP2.c_str(), problem, mask_dim, mask_dim);
-		winP2 = temp;
-		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		moveWindow(winP2, 300,0);
-		cvShowImage( winP2.c_str(), imgP2 );                   // Show our image inside it.
-		
-	}else if(strcmp(problem, "2b") == 0){
-		//Problem 2b : mean filter
-		p2a(bufRaw, buf_work, WIDTH, HEIGHT, mask_dim);
-
-		cvSetData(imgP2, buf_work, WIDTH);
-		//show the median filtered image
-		char temp[100];
-		sprintf(temp, "%s%s mean :%dx%d", winP2.c_str(), problem, mask_dim, mask_dim);
-		winP2 = temp;
-		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		moveWindow(winP2, 300,0);
-		cvShowImage( winP2.c_str(), imgP2 );                   // Show our image inside it.
-	}
+	/*
 	//diff src and filtered image
 	img_diff(bufRaw, buf_work, buf_diff, WIDTH, HEIGHT);
 	cvSetData(imgP2D, buf_diff, WIDTH);
 	//show the diff image
 	winP2D = (winP2D + problem) + " diff";
 	namedWindow( winP2D, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winP2D, 300,0);
+	moveWindow(winP2D, 300,0+SCR_Y_OFFSET);
 	cvShowImage( winP2D.c_str(), imgP2D);                   // Show our image inside it.
-	
-	//////////////////////////////////////////
-	//bonus
-	//show histogram of image
-	unsigned hist_tableI[MAX_GREY_LEVEL];
-	uint8_t histeq_mapI[MAX_GREY_LEVEL];
-	hist(hist_tableI, MAX_GREY_LEVEL, buf_work, WIDTH, HEIGHT);
-	draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 250, 250);
-
-	//histogram equlization of Image
-	uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
-	unsigned cdf_table[MAX_GREY_LEVEL];
-	hist_eq(buf_work, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-			MAX_GREY_LEVEL,	histeq_mapI, winP2);
-
-	//show cdf of image I
-	string t_name(winP2 + " cdf ");
-	draw_hist(cdf_table, MAX_GREY_LEVEL, t_name/*, int wx=300, int wy=300*/);
-	
-	//show the image II, the histogram equlization of Image I
-	IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(imgII, bufII, WIDTH);
-	namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow( winP2 + "Hist eq", 250,250);
-	string winP2I = winP2 + "Hist eq";
-	char win_hname[100];
-	strcpy(win_hname, winP2I.c_str());
-	cvShowImage( win_hname, imgII );                   // Show our image inside it.
-
+	*/
 	
 /*
 
@@ -255,13 +368,13 @@ int main( int argc, char** argv )
 	cvReleaseImageHeader(&imgRaw);
 	free(bufRaw);
 	
-	destroyWindow(winP2);
-	cvReleaseImageHeader(&imgP2);
-	free(buf_work);
+	//destroyWindow("median");
+	cvReleaseImageHeader(&imgP2a);
+	//free(buf_work);
 
-	destroyWindow(winP2D);
-	cvReleaseImageHeader(&imgP2D);
-	free(buf_diff);
+	//destroyWindow(winP2D);
+	cvReleaseImageHeader(&imgP2b);
+	//free(buf_diff);
 
     return 0;
 }

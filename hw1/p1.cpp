@@ -150,20 +150,20 @@ int main( int argc, char** argv )
 	cvShowImage( fileI.c_str(), org_imgI );                   // Show our image inside it.
 
 	//show histogram of image I
-	unsigned hist_tableI[MAX_GREY_LEVEL];
-	uint8_t histeq_mapI[MAX_GREY_LEVEL];
-	hist(hist_tableI, MAX_GREY_LEVEL, bufI, WIDTH, HEIGHT);
-	draw_hist(hist_tableI, MAX_GREY_LEVEL, fileI, 250, 250);
+	unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
+	uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
+	hist(hist_tableI, (MAX_GREY_LEVEL+1), bufI, WIDTH, HEIGHT);
+	draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), fileI, 250, 250);
 
 	//histogram equlization of Image I
 	uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
-	unsigned cdf_table[MAX_GREY_LEVEL];
+	unsigned cdf_table[(MAX_GREY_LEVEL+1)];
 	hist_eq(bufI, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-			MAX_GREY_LEVEL,	histeq_mapI, fileI);
+			(MAX_GREY_LEVEL+1),	histeq_mapI, fileI);
 
 	//show cdf of image I
 	string t_name(fileI + " cdf ");
-	draw_hist(cdf_table, MAX_GREY_LEVEL, t_name/*, int wx=300, int wy=300*/);
+	draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name/*, int wx=300, int wy=300*/);
 	
 	//show the image II, the histogram equlization of Image I
 	IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
@@ -185,19 +185,19 @@ int main( int argc, char** argv )
 	cvShowImage( win_nameD.c_str(), org_imgD );                   // Show our image inside it.
 
 	//show histogram of image D
-	unsigned hist_tableD[MAX_GREY_LEVEL];
-	uint8_t histeq_mapH[MAX_GREY_LEVEL];
-	hist(hist_tableD, MAX_GREY_LEVEL, bufD, WIDTH, HEIGHT);
-	draw_hist(hist_tableD, MAX_GREY_LEVEL, win_nameD, 350,250);
+	unsigned hist_tableD[(MAX_GREY_LEVEL+1)];
+	uint8_t histeq_mapH[(MAX_GREY_LEVEL+1)];
+	hist(hist_tableD, (MAX_GREY_LEVEL+1), bufD, WIDTH, HEIGHT);
+	draw_hist(hist_tableD, (MAX_GREY_LEVEL+1), win_nameD, 350,250);
 
 	//histogram equlization of image D
 	bufH= (uint8_t *)malloc( WIDTH * HEIGHT);
 	hist_eq(bufD, bufH,  WIDTH * HEIGHT, hist_tableD, cdf_table,
-			MAX_GREY_LEVEL,	histeq_mapH, win_nameD);
+			(MAX_GREY_LEVEL+1),	histeq_mapH, win_nameD);
 
 	//show cdf of image D
 	t_name=win_nameD + " cdf ";
-	draw_hist(cdf_table, MAX_GREY_LEVEL, t_name/*, int wx=300, int wy=300*/);
+	draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name/*, int wx=300, int wy=300*/);
 
 	//show image H, the histogram equlization of image D
 	IplImage* imgH = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
@@ -208,9 +208,9 @@ int main( int argc, char** argv )
 	strcpy(win_hname, win_nameH.c_str());
 	cvShowImage( win_hname, imgH );                   // Show our image inside it.
 	//show histogram of image H
-	unsigned hist_tableH[MAX_GREY_LEVEL];
-	hist(hist_tableH, MAX_GREY_LEVEL, bufH, WIDTH, HEIGHT);
-	draw_hist(hist_tableH, MAX_GREY_LEVEL, win_nameH, 350,250);
+	unsigned hist_tableH[(MAX_GREY_LEVEL+1)];
+	hist(hist_tableH, (MAX_GREY_LEVEL+1), bufH, WIDTH, HEIGHT);
+	draw_hist(hist_tableH, (MAX_GREY_LEVEL+1), win_nameH, 350,250);
 
 	//create output file H
 	if( (fd = open("H.raw", O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){

@@ -9,7 +9,8 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 
-#define	MAX_GREY_LEVEL	(1<<8)
+#define	DEFAULT_BIT_DEPTH	(8)
+#define	MAX_GREY_LEVEL	((1<<DEFAULT_BIT_DEPTH) -1)
 
 #define	WIDTH	(256)
 #define	HEIGHT	(256)
@@ -31,6 +32,20 @@ int flip(uint8_t *org, uint8_t *flipped, char fv);
 //split path string to substring folder and file
 void SplitFilename (const string& str, string &folder, string &file);
 
+/* M x N matrix
+ * impulse noise : pepper and salt noise generator
+ * black_thr : black threshold <
+ * white_thr : white threshold >
+ */
+void impulse_noise_gen(uint8_t *imp, int M, int N, uint8_t black_thr, uint8_t white_thr);
+void impulse_noise_add(uint8_t *imp, uint8_t *image, int M, int N);
+
+/* M x N matrix
+ * white noise : uniform white noise generator
+ * white_thr : white threshold >
+ */
+void white_noise_gen(uint8_t *imp, int M, int N, uint8_t white_thr);
+void white_noise_add(uint8_t *white, uint8_t *image, int M, int N );
 /** @brief expanding src image to a new image by padding some rows and columns
  * around the border, so the matrix kernel can operate on the border of the Original
  * image.
