@@ -44,11 +44,11 @@ int flip(uint8_t *org, uint8_t *flipped, char fv)
 	return 0;
 }
 
-/** @brief expanding src image to a new image by padding some rows and columns
+/** @brief boundary extension of the src image to a new image by padding some rows and columns
  * around the border.
- *
+ * pad : odd extension
  */
-uint8_t *expand_by_pad(uint8_t *src, int width, int height, int pad)
+uint8_t *boundary_ext(uint8_t *src, int width, int height, int pad)
 {
 	assert(src);
 
@@ -90,16 +90,47 @@ uint8_t *expand_by_pad(uint8_t *src, int width, int height, int pad)
 	return pad_buf;
 }
 
+/** @brief power 2 of the diff two images : (s1[]-s2[]) * (s1[]-s2[]) = diff[]
+ * 
+ */
 void img_diff(uint8_t *s1, uint8_t *s2, uint8_t *diff, int width, int height)
 {
 	for(int y = 0 ; y < height; y++)
 		for(int x = 0 ; x < width;x++){
 			int d = s1[x+y*width] - s2[x+y*width];
-			if(d*d > 100)
-				diff[x+y*width]= 255;
-			else 
-				diff[x+y*width]= 0;
+			diff[x+y*width]= d*d;
 		}
+}
+
+/** @brief power 2 of the diff two images : (s1[]-s2[]) * (s1[]-s2[]) = diff[]
+ * I : orignal image
+ * P : processed image
+ */
+double img_MSE(uint8_t *I, uint8_t *P, int width, int height)
+{
+	double mse=0.0;
+	for(int y = 0 ; y < height; y++)
+		for(int x = 0 ; x < width;x++){
+			int d = I[x+y*width] - P[x+y*width];
+			mse += d*d;
+		}
+	printf("%s:mse=%f, MSE=%f\n",__func__, mse, mse/(height * width));
+	return mse/(height * width);
+}
+
+/** Peak Signal to Noise Ratio
+ * L : bits of the pixel
+ */
+float PSNR(uint8_t *I, uint8_t *P, int width, int height, int L)
+{
+	float mse = img_MSE(I, P, width, height);
+	unsigned level = (0x1 << L ) -1;
+	
+	printf("%s:L=%d, level=%d\n",__func__, L, level);
+	float psnr = 10.0 * logf( (level * level) / mse );
+	printf("%s:psnr=%f\n",__func__, psnr);
+	
+	return psnr;
 }
 
 /** @brif media filter
@@ -113,7 +144,7 @@ void median(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 	int pad = (dim / 2);
 	uint8_t *pad_buf=NULL;
 	//expand source image by padding borders
-	pad_buf = expand_by_pad(src, width, height, pad);
+	pad_buf = boundary_ext(src, width, height, pad);
 
 	for(int y = pad;  y < (height+pad); y++)
        for(int x = pad ; x < (width+pad); x++){
@@ -139,7 +170,7 @@ void median(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 }
 
 /** @brif media filter
- * dim : dim x dim mask kernel
+ * dim : dim x dim mask kernel, dim is "odd"
  *
  */
 void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim)
@@ -149,7 +180,7 @@ void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 	int pad = (dim / 2);
 	uint8_t *pad_buf=NULL;
 	//expand source image by padding borders
-	pad_buf = expand_by_pad(src, width, height, pad);
+	pad_buf = boundary_ext(src, width, height, pad);
 
 	for(int fx = 0; fx < dim;fx++)
 		for(int fy = 0; fy < dim; fy++){
@@ -262,4 +293,28 @@ void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx, i
 	namedWindow(win_name, CV_WINDOW_AUTOSIZE );
 	moveWindow(win_name, wx,wy);
 	imshow(win_name, histImage );
+}
+
+/* opencv
+ * 
+ */
+void cvPrintf(IplImage* img, const char *text, CvPoint TextPosition, CvFont Font1,
+			  CvScalar Color)
+{
+  //char text[] = "Funny text inside the box";
+  //int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
+  //double fontScale = 2;
+
+  // center the text
+  //Point textOrg((img.cols - textSize.width)/2,
+	//			(img.rows + textSize.height)/2);
+
+  //double Scale=2.0;
+  //int Thickness=2;
+  //CvScalar Color=CV_RGB(255,0,0);
+  //CvPoint TextPosition=cvPoint(400,50);
+  //CvFont Font1=cvFont(Scale,Thickness);
+  // then put the text itself
+  cvPutText(img, text, TextPosition, &Font1, Color);
+  //cvPutText(img, text, TextPosition, &Font1, CV_RGB(0,255,0));
 }

@@ -22,14 +22,11 @@ using namespace std;
 
 #include "dip.h"
 
-const char org_display[]="Original Display";
-const char flip_v[]="vertically flipped";
-const char flip_h[]="horizontally flipped";
-
-char raw_fileD[1024]="sample2.raw";
-char raw_file[1024]="sample3.raw";
+char raw_file[1024];
 char problem[100]="2a";
 int mask_dim=3;
+const string track_bar_name("kernel dim x dim");
+IplImage* imgBar=NULL;
 
 static void usage(FILE *fp, int argc, char **argv)
 {
@@ -135,11 +132,10 @@ void p2b(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
 	mean(src, dst, width, height, dim);
 }
 
-#define	MAX_DIM		(33)
 void ProcessDim(int pos, void *userdata)
 {
 	uint8_t *bufRaw = (uint8_t *)userdata;
-	
+
 	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
 	if(pos < 3 ) {
 		pos=3;
@@ -150,6 +146,13 @@ void ProcessDim(int pos, void *userdata)
 	mask_dim = pos;
 	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
 
+	char dim_str[100];
+	sprintf(dim_str, "dim:%d x %d", mask_dim, mask_dim);
+	cvSetZero(imgBar);
+	cvPrintf(imgBar, dim_str, cvPoint(1, 30),
+								cvFont(1.0, 1.0), CV_RGB(255,255,255));
+	cvShowImage( track_bar_name.c_str(), imgBar);
+		
 	IplImage* imgP2a = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	IplImage* imgP2b = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	string winP2="P";
@@ -181,24 +184,32 @@ void ProcessDim(int pos, void *userdata)
 		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600,0+SCR_Y_OFFSET);
 
 		//histogram equlization of Image
-		uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
+		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
 		unsigned cdf_table[MAX_GREY_LEVEL];
-		hist_eq(buf_worka, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
+		hist_eq(buf_worka, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
 				MAX_GREY_LEVEL,	histeq_mapI, winP2);
 
 		//show cdf of image
 		string t_name(winP2 + " cdf ");
 		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name,800,0+SCR_Y_OFFSET);
 		
-		//show the image II, the histogram equlization of Image I
-		IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-		cvSetData(imgII, bufII, WIDTH);
+		//show the image , the histogram equlization of Image I
+		IplImage* imgHE = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+		cvSetData(imgHE, buf_he, WIDTH);
 		namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
 		moveWindow( winP2 + "Hist eq", 1050, 0 + SCR_Y_OFFSET);
 		string winP2I = winP2 + "Hist eq";
 		char win_hname[100];
 		strcpy(win_hname, winP2I.c_str());
-		cvShowImage( win_hname, imgII );                   // Show our image inside it.
+		cvShowImage( win_hname, imgHE );                   // Show our image inside it.
+		
+		//PSNR
+		char psnr_str[100];
+		float psnr = PSNR(bufRaw, buf_he, WIDTH, HEIGHT);
+		sprintf(psnr_str, "PSNR of median=%f", psnr);
+		cvPrintf(imgBar, psnr_str, cvPoint(1, 50),
+									cvFont(1.0, 1.0), CV_RGB(255,255,255));
+		cvShowImage( track_bar_name.c_str(), imgBar);
 	}
 	//else if(strcmp(problem, "2b") == 0)
 	{
@@ -225,24 +236,32 @@ void ProcessDim(int pos, void *userdata)
 		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600, 300+SCR_Y_OFFSET);
 
 		//histogram equlization of Image
-		uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
+		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
 		unsigned cdf_table[MAX_GREY_LEVEL];
-		hist_eq(buf_workb, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
+		hist_eq(buf_workb, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
 				MAX_GREY_LEVEL,	histeq_mapI, winP2);
 
-		//show cdf of image I
+		//show cdf of image
 		string t_name(winP2 + " cdf ");
 		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name, 800, 300+SCR_Y_OFFSET);
 		
-		//show the image II, the histogram equlization of Image I
-		IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-		cvSetData(imgII, bufII, WIDTH);
+		//show the image, the histogram equlization of Image I
+		IplImage* imgHE = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+		cvSetData(imgHE, buf_he, WIDTH);
 		namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
 		moveWindow( winP2 + "Hist eq", 1050,300+SCR_Y_OFFSET);
 		string winP2I = winP2 + "Hist eq";
 		char win_hname[100];
 		strcpy(win_hname, winP2I.c_str());
-		cvShowImage( win_hname, imgII );                   // Show our image inside it.
+		cvShowImage( win_hname, imgHE );                   // Show our image inside it.
+		
+		//PSNR
+		char psnr_str[100];
+		float psnr = PSNR(bufRaw, buf_he, WIDTH, HEIGHT);
+		sprintf(psnr_str, "PSNR of mean=%f", psnr);
+		cvPrintf(imgBar, psnr_str, cvPoint(1, 80),
+									cvFont(1.0, 1.0), CV_RGB(255,255,255));
+		cvShowImage( track_bar_name.c_str(), imgBar);
 	}
 #if 0	
 	//diff src and filtered image
@@ -279,7 +298,6 @@ int main( int argc, char** argv )
 	}
 
 	//opening file
-	printf("%s\nD:%s\n", raw_file, raw_fileD);
 	uint8_t *bufRaw=NULL;
 	if( (fd = open(raw_file, O_RDONLY)) != -1 ){
 		bufRaw= (uint8_t *)malloc( WIDTH * HEIGHT);
@@ -293,10 +311,16 @@ int main( int argc, char** argv )
 
 	/////////////////////////////////////
 	//tracking bar to set dimension of kernel matrix
-	cv::namedWindow("kernel dim x dim", WINDOW_AUTOSIZE);
-	cv::createTrackbar("dim", "kernel dim x dim", &mask_dim, MAX_DIM, ProcessDim, 
+	imgBar = cvCreateImage(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 3);
+	cvSetZero(imgBar);
+	cv::namedWindow(track_bar_name, WINDOW_AUTOSIZE);
+	cv::createTrackbar("dim", track_bar_name, &mask_dim, MAX_DIM, ProcessDim, 
 						bufRaw);
-	moveWindow("kernel dim x dim", 1100,300+SCR_Y_OFFSET);
+	//CvFont Font1=cvFont(1.5,1.0);
+	//cvPutText(imgBar, "text", cvPoint(10, 50), &Font1, CV_RGB(250,255,255));
+
+	moveWindow(track_bar_name, 1300,0+SCR_Y_OFFSET);
+	cvShowImage( track_bar_name.c_str(), imgBar);
 	//////////////////////////////////
 	
 	//load raw file

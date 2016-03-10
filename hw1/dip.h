@@ -17,6 +17,9 @@
 #define	HIST_WIN_WIDTH 	(256)
 #define	HIST_WIN_HEIGHT	(256)
 
+//MAX kernel matrix dimension
+#define	MAX_DIM		(33)
+
 /** @brief flipping the image
  * org : input
  * flipped : output
@@ -35,6 +38,18 @@ void SplitFilename (const string& str, string &folder, string &file);
 uint8_t *expand_border(uint8_t *src, int width, int height, int pad);
 
 void img_diff(uint8_t *s1, uint8_t *s2, uint8_t *diff, int width, int height);
+
+/** @brief power 2 of the diff two images : (s1[]-s2[]) * (s1[]-s2[]) = diff[]
+ * I : orignal image
+ * P : processed image
+ */
+double img_MSE(uint8_t *I, uint8_t *P, int width, int height);
+
+/** Peak Signal to Noise Ratio
+ * L : bits of the pixel, default is 8 bits
+ */
+float PSNR(uint8_t *I, uint8_t *P, int width, int height, int L=8);
+
 /** @brif media filter
  * dim : dim x dim mask kernel
  *
@@ -76,6 +91,11 @@ void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
  * h_size : level of histogram table, ie, 256 grey levels
  */
 void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx=300, int wy=300);
+/* opencv
+ * 
+ */
+void cvPrintf(IplImage* img, const char *text, CvPoint TextPosition, CvFont Font1,
+			  CvScalar Color);
 
 extern int SCR_X_OFFSET, SCR_Y_OFFSET;
 
