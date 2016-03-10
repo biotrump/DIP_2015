@@ -36,22 +36,25 @@ static void usage(FILE *fp, int argc, char **argv)
 	fprintf(fp,
 		 "Usage: %s [options]\n\n"
 		 "Options:\n"
-		 "-h | --help       Print this message\n"
-		 "-n | --dim	n	nxn mask\n"
-		 "-p | --problem 2a The problem 2a,2b,2c... to solve\n"
-		 "-r | --raw	    The full path of the raw file \n"
+		 "-h | --help        Print this message\n"
+		 "-n | --dim n       nxn mask\n"
+		 "-p | --problem 2x  The problem 2a,2b,2c... to solve\n"
+		 "-r | --raw	     The full path of the raw file \n"
+		 "-o | --offset	 mxn The screen offset for dual screen\n"
 		 "",
 		 argv[0]);
 }
 
-static const char short_options[] = "hn:p:r:";
+static const char short_options[] = "hn:o:p:r:";
 
 static const struct option
 long_options[] = {
 	{ "help",   	no_argument,       NULL, 'h' },
 	{ "dim",		required_argument, NULL, 'n' },
+	{ "offset",		required_argument, NULL, 'o' },
 	{ "problem",	required_argument, NULL, 'p' },
 	{ "raw",		required_argument, NULL, 'r' },
+	
 	{ 0, 0, 0, 0 }
 };
 
@@ -78,6 +81,18 @@ static int option(int argc, char **argv)
 			printf("mask_dim=%d\n", mask_dim);
 			if (errno){
 				r=-1;
+			}
+			break;
+		case 'o':
+			if(optarg && strlen(optarg)){
+				int i=0;
+				printf("screen offset:%s\n",optarg);
+				while(optarg[i] && optarg[i] !='x') i++;
+				if(optarg[i] =='x') {
+					optarg[i]=' ';//delimeter
+					sscanf(optarg,"%d %d", &SCR_X_OFFSET, &SCR_Y_OFFSET);
+					printf("SCR_X_OFFSET=%d, SCR_Y_OFFSET=%d\n", SCR_X_OFFSET, SCR_Y_OFFSET);
+				}
 			}
 			break;
 		case 'p':
@@ -154,7 +169,7 @@ void ProcessDim(int pos, void *userdata)
 		//sprintf(temp, "%s median", winP2.c_str());
 		winP2 = "median";
 		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		moveWindow(winP2,300,0);
+		moveWindow(winP2,300,0 + SCR_Y_OFFSET);
 		cvShowImage( winP2.c_str(), imgP2a );                   // Show our image inside it.
 		
 		//////////////////////////////////////////
@@ -163,7 +178,7 @@ void ProcessDim(int pos, void *userdata)
 		unsigned hist_tableI[MAX_GREY_LEVEL];
 		uint8_t histeq_mapI[MAX_GREY_LEVEL];
 		hist(hist_tableI, MAX_GREY_LEVEL, buf_worka, WIDTH, HEIGHT);
-		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600,0);
+		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600,0+SCR_Y_OFFSET);
 
 		//histogram equlization of Image
 		uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
@@ -171,15 +186,15 @@ void ProcessDim(int pos, void *userdata)
 		hist_eq(buf_worka, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
 				MAX_GREY_LEVEL,	histeq_mapI, winP2);
 
-		//show cdf of image I
+		//show cdf of image
 		string t_name(winP2 + " cdf ");
-		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name/*, int wx=300, int wy=300*/);
+		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name,800,0+SCR_Y_OFFSET);
 		
 		//show the image II, the histogram equlization of Image I
 		IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(imgII, bufII, WIDTH);
 		namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-		moveWindow( winP2 + "Hist eq", 850, 0);
+		moveWindow( winP2 + "Hist eq", 1050, 0 + SCR_Y_OFFSET);
 		string winP2I = winP2 + "Hist eq";
 		char win_hname[100];
 		strcpy(win_hname, winP2I.c_str());
@@ -198,7 +213,7 @@ void ProcessDim(int pos, void *userdata)
 		//sprintf(temp, "%s mean", winP2.c_str());
 		winP2 = "mean";
 		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		moveWindow(winP2, 300,300);
+		moveWindow(winP2, 300,300+SCR_Y_OFFSET);
 		cvShowImage( winP2.c_str(), imgP2b );                   // Show our image inside it.
 
 		//////////////////////////////////////////
@@ -207,7 +222,7 @@ void ProcessDim(int pos, void *userdata)
 		unsigned hist_tableI[MAX_GREY_LEVEL];
 		uint8_t histeq_mapI[MAX_GREY_LEVEL];
 		hist(hist_tableI, MAX_GREY_LEVEL, buf_workb, WIDTH, HEIGHT);
-		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600, 300);
+		draw_hist(hist_tableI, MAX_GREY_LEVEL, winP2, 600, 300+SCR_Y_OFFSET);
 
 		//histogram equlization of Image
 		uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
@@ -217,13 +232,13 @@ void ProcessDim(int pos, void *userdata)
 
 		//show cdf of image I
 		string t_name(winP2 + " cdf ");
-		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name/*, int wx=300, int wy=300*/);
+		draw_hist(cdf_table, MAX_GREY_LEVEL, t_name, 800, 300+SCR_Y_OFFSET);
 		
 		//show the image II, the histogram equlization of Image I
 		IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(imgII, bufII, WIDTH);
 		namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-		moveWindow( winP2 + "Hist eq", 850,300);
+		moveWindow( winP2 + "Hist eq", 1050,300+SCR_Y_OFFSET);
 		string winP2I = winP2 + "Hist eq";
 		char win_hname[100];
 		strcpy(win_hname, winP2I.c_str());
@@ -277,10 +292,11 @@ int main( int argc, char** argv )
 	}
 
 	/////////////////////////////////////
-	//process(0, (void *)(tracker+1) );//green channel
+	//tracking bar to set dimension of kernel matrix
 	cv::namedWindow("kernel dim x dim", WINDOW_AUTOSIZE);
 	cv::createTrackbar("dim", "kernel dim x dim", &mask_dim, MAX_DIM, ProcessDim, 
 						bufRaw);
+	moveWindow("kernel dim x dim", 1100,300+SCR_Y_OFFSET);
 	//////////////////////////////////
 	
 	//load raw file
@@ -290,7 +306,7 @@ int main( int argc, char** argv )
 	cvSetData(imgRaw, bufRaw, WIDTH);
 	//show the raw image
 	namedWindow( winRaw, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winRaw, 0,0);
+	moveWindow(winRaw, 0,0+SCR_Y_OFFSET);
 	cvShowImage( winRaw.c_str(), imgRaw );                   // Show our image inside it.
 
 	//Problem solution

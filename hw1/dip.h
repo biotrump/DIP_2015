@@ -76,4 +76,7 @@ void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
  * h_size : level of histogram table, ie, 256 grey levels
  */
 void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx=300, int wy=300);
+
+extern int SCR_X_OFFSET, SCR_Y_OFFSET;
+
 #endif	//_H_DIP_LIB_H

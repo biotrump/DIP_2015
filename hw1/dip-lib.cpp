@@ -23,6 +23,8 @@ using namespace std;
 
 #include "dip.h"
 
+int SCR_X_OFFSET=0, SCR_Y_OFFSET=0;
+
 /** @brief flipping the image
  * org : input
  * flipped : output
@@ -82,7 +84,7 @@ uint8_t *expand_by_pad(uint8_t *src, int width, int height, int pad)
 	cvSetData(imgMedia, pad_buf, pw);
 	//show the median filtered image
 	namedWindow("expanding border", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("expanding border", 0,300);
+	moveWindow("expanding border", 0,300+SCR_Y_OFFSET);
 	cvShowImage( "expanding border", imgMedia );                   // Show our image inside it.
 
 	return pad_buf;
