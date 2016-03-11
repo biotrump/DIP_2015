@@ -9,37 +9,36 @@
 # GUI: opencv 2.4.x with QT5
 # make file : CMakeLists.txt
 # ================================================
-# 1. package installation
+# 1. packages installation
 # ================================================
-# cmake installation
-# ----------------------------------------------------------------------
+# cmake installation:
 # %sudo apt-get install cmake
 # ----------------------------------------------------------------------
-# opencv installation
-# ----------------------------------------------------------------------
+# opencv installation:
 # %sudo apt-get install libcv-dev libopencv-dev libhighgui-dev
 # %curl http://mirrors.kernel.org/ubuntu/pool/universe/o/opencv/libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb > libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb
 # %sudo dpkg -i libcv-dev_2.4.8+dfsg1-2ubuntu1_amd64.deb
 # ----------------------------------------------------------------------
 # qt5 installation
-# ----------------------------------------------------------------------
 # %sudo apt-get install qt5-default qt5-qmake qt5-image-formats-plugins
 # ================================================
 # 2. How to Build ?
 # ================================================
-# %tar xf hw1.tar
+# %tar zxf hw1.tar.zip
 # %cd hw1
+#
 # %./hw1.sh
 # or manually
 # %mkdir -p build
 # %cd build
 # %cmake ..
 # %make
+# %cd ..
 # ================================================
 # 3. How to Run?
 # ================================================
 # 0. How to show a raw file by 256x256?
-# %./bin/bin/raw_show path/to/raw_file
+# %./build/bin/raw_show path/to/raw_file
 # ----------------------------------------------------------------------
 # 1. flip the raw file,sample1.raw, vertically and horizontally 
 # and output flipped files are "I_h.raw" and "I_v.raw".

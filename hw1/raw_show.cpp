@@ -18,6 +18,9 @@
 using namespace cv;
 using namespace std;
 
+#include "dip.h"
+#include "helper.h"
+
 const char org_display[]="raw Display";
 
 int main( int argc, char** argv )
@@ -34,18 +37,21 @@ int main( int argc, char** argv )
 		close(fd);
 		cout << "request size = " << WIDTH * HEIGHT << ", read size=" << s << endl;
 
+		string folder, wname;
+		SplitFilename (argv[1], folder, wname);
+
 		IplImage* org_img8u = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 		cvSetData(org_img8u, u8, WIDTH);
 
 		//show the Original image
-		cvNamedWindow( org_display, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		cvMoveWindow(org_display, 100,100);
-		cvShowImage( org_display, org_img8u );                   // Show our image inside it.
+		namedWindow(wname, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+		moveWindow(wname, 100,100);
+		cvShowImage(wname.c_str(), org_img8u );                   // Show our image inside it.
 
 		cout << "press any key to quit..." << endl;
 		waitKey(0);                                          // Wait for a keystroke in the window
 
-		cvDestroyWindow(org_display);
+		destroyWindow(wname);
 		cvReleaseImageHeader(&org_img8u);
 		
 		free(u8);
