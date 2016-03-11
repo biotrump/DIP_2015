@@ -20,8 +20,8 @@ void draw_hist(unsigned *hist_table, int h_size, const string &win_name,
 /** @brief  output a format text by opencv
  * 
  */
-void cvPrintf(IplImage* img, const char *text, CvPoint TextPosition, CvFont Font1,
-			  CvScalar Color);
+void cvPrintf(IplImage* img, const char *text, CvPoint TextPosition, CvFont Font1=cvFont(1.0, 1.0),
+			  CvScalar Color=CV_RGB(255,255,255));
 
 /** @brief show the image by opencv gui
  * buf[] : image buffer

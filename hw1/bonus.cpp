@@ -1,4 +1,6 @@
 /** @brief DIP program to flip an image
+ * ./bin/bonus -o 0x700 -p 2a -n 3 -r ../../assignment/hw1/BONUS_01/bonus.raw
+ * 
  * @author <Thomas Tsai, thomas@life100.cc>
  *
  */
@@ -24,6 +26,8 @@ using namespace std;
 #include "helper.h"
 //MAX kernel matrix dimension
 #define	MAX_DIM		(33)
+#define	WIN_GAP_X	(280)
+#define	WIN_GAP_Y	(300)
 
 char raw_file[1024];
 char problem[100]="2a";
@@ -125,18 +129,10 @@ static int option(int argc, char **argv)
 	return r;
 }
 
-void p2a(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
-{
-	median(src, dst, width, height, dim);
-}
-
-void p2b(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
-{
-	mean(src, dst, width, height, dim);
-}
-
 void ProcessDim(int pos, void *userdata)
 {
+	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
+	
 	uint8_t *bufRaw = (uint8_t *)userdata;
 
 	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
@@ -157,126 +153,103 @@ void ProcessDim(int pos, void *userdata)
 	cvShowImage( track_bar_name.c_str(), imgBar);
 		
 	IplImage* imgP2a = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	IplImage* imgP2b = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	string winP2="P";
+	//IplImage* imgP2b = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	//string winP2="P";
 	uint8_t *buf_worka=NULL, *buf_workb=NULL;
 	buf_worka= (uint8_t *)malloc( WIDTH * HEIGHT);
 	buf_workb= (uint8_t *)malloc( WIDTH * HEIGHT);
-	//if( strcmp(problem, "2a") == 0)
+
 	{
-		//Problem 2a : median filter
-		p2a(bufRaw, buf_worka, WIDTH, HEIGHT, mask_dim);
-
-		cvSetData(imgP2a, buf_worka, WIDTH);
-		//show the median filtered image
-		//char temp[100];
-		//sprintf(temp, "%s%s median :%dx%d", winP2.c_str(), problem, mask_dim, mask_dim);
-		//sprintf(temp, "%s%s median", winP2.c_str(), problem);
-		//sprintf(temp, "%s median", winP2.c_str());
-		winP2 = "median";
-		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		moveWindow(winP2,300,0 + SCR_Y_OFFSET);
-		cvShowImage( winP2.c_str(), imgP2a );                   // Show our image inside it.
+		//1. perform median filter by mask_dim x mask_dim
+		median(bufRaw, buf_worka, WIDTH, HEIGHT, mask_dim);
 		
-		//////////////////////////////////////////
-		//bonus
+		string wname_median = "bonus : median";
+		IplImage *imgMedian = cvDisplay(buf_worka, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+									WIN_GAP_Y+SCR_Y_OFFSET, wname_median, cvFlag);
+
 		//show histogram of image
-		unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
-		uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
-		hist(hist_tableI, (MAX_GREY_LEVEL+1), buf_worka, WIDTH, HEIGHT);
-		draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), winP2, 600,0+SCR_Y_OFFSET);
+		unsigned hist_tableMD[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapMD[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableMD, (MAX_GREY_LEVEL+1), buf_worka, WIDTH, HEIGHT);
+		string wname_mdHist("bonus median : hist");
+		draw_hist(hist_tableMD, (MAX_GREY_LEVEL+1), wname_mdHist, 
+				WIN_GAP_X*4+SCR_X_OFFSET, WIN_GAP_Y+SCR_Y_OFFSET, cvFlag);
 
-		//histogram equlization of Image
-		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
+		//2. perform histogram equlization of Image
+		uint8_t *buf_mdhe= (uint8_t *)malloc( WIDTH * HEIGHT);
 		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
-		hist_eq(buf_worka, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-				(MAX_GREY_LEVEL+1),	histeq_mapI);
+		hist_eq(buf_worka, buf_mdhe,  WIDTH * HEIGHT, hist_tableMD, cdf_table,
+				(MAX_GREY_LEVEL+1),	histeq_mapMD);
 
+		int fd=-1;
+		char out_file[100];
+		sprintf(out_file,"bonus_%dx%d.raw",mask_dim,mask_dim);
+		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+			int s=write(fd, buf_mdhe, WIDTH * HEIGHT);
+			cout << "write:" << s << endl;
+			close(fd);
+		}else{
+			cout << out_file << " open failed!"  << endl;
+		}
+		
 		//show cdf of image
-		string t_name(winP2 + " cdf ");
-		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name,800,0+SCR_Y_OFFSET);
-		
-		//show the image , the histogram equlization of Image I
-		IplImage* imgHE = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-		cvSetData(imgHE, buf_he, WIDTH);
-		namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-		moveWindow( winP2 + "Hist eq", 1050, 0 + SCR_Y_OFFSET);
-		string winP2I = winP2 + "Hist eq";
-		char win_hname[100];
-		strcpy(win_hname, winP2I.c_str());
-		cvShowImage( win_hname, imgHE );                   // Show our image inside it.
-		
+		string wname_mdCDF("bonus median : cdf");
+		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_mdCDF, WIN_GAP_X*5+SCR_X_OFFSET,
+				WIN_GAP_Y*1+SCR_Y_OFFSET);
+
+		//show histogram equlization of the mean image
+		string wnameMDHE("median : Hist eq");
+		IplImage *imgMDHE = cvDisplay(buf_mdhe, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameMDHE, cvFlag);
+
 		//PSNR
 		char psnr_str[100];
-		float psnr = PSNR(bufRaw, buf_he, WIDTH, HEIGHT);
+		float psnr = PSNR(bufRaw, buf_mdhe, WIDTH, HEIGHT);
 		sprintf(psnr_str, "PSNR of median=%f", psnr);
-		cvPrintf(imgBar, psnr_str, cvPoint(1, 50),
-									cvFont(1.0, 1.0), CV_RGB(255,255,255));
+		cvPrintf(imgBar, psnr_str, cvPoint(1, 50));
 		cvShowImage( track_bar_name.c_str(), imgBar);
 	}
-	//else if(strcmp(problem, "2b") == 0)
+	
 	{
-		//Problem 2b : mean filter
-		p2b(bufRaw, buf_workb, WIDTH, HEIGHT, mask_dim);
+		//perform mean filter by mask_dim x mask_dim
+		mean(bufRaw, buf_workb, WIDTH, HEIGHT, mask_dim);
 
-		cvSetData(imgP2b, buf_workb, WIDTH);
-		//show the median filtered image
-		//char temp[100];
-		//sprintf(temp, "%s%s mean :%dx%d", winP2.c_str(), problem, mask_dim, mask_dim);
-		//sprintf(temp, "%s%s mean", winP2.c_str(), problem);
-		//sprintf(temp, "%s mean", winP2.c_str());
-		winP2 = "mean";
-		namedWindow( winP2, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-		moveWindow(winP2, 300,300+SCR_Y_OFFSET);
-		cvShowImage( winP2.c_str(), imgP2b );                   // Show our image inside it.
+		//show image after mean filter
+		string wname_mean = "bonus : mean";
+		IplImage *imgMean = cvDisplay(buf_workb, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+									WIN_GAP_Y+SCR_Y_OFFSET, wname_mean, cvFlag);
 
-		//////////////////////////////////////////
-		//bonus
 		//show histogram of image
-		unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
-		uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
-		hist(hist_tableI, (MAX_GREY_LEVEL+1), buf_workb, WIDTH, HEIGHT);
-		draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), winP2, 600, 300+SCR_Y_OFFSET);
+		unsigned hist_tableMn[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapMn[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableMn, (MAX_GREY_LEVEL+1), buf_workb, WIDTH, HEIGHT);
+		string wname_mnHist("bonus mean : hist");
+		draw_hist(hist_tableMn, (MAX_GREY_LEVEL+1), wname_mnHist,
+				  WIN_GAP_X+SCR_X_OFFSET, WIN_GAP_Y+SCR_Y_OFFSET, cvFlag);
 
 		//histogram equlization of Image
 		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
 		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
-		hist_eq(buf_workb, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-				(MAX_GREY_LEVEL+1),	histeq_mapI);
+		hist_eq(buf_workb, buf_he,  WIDTH * HEIGHT, hist_tableMn, cdf_table,
+				(MAX_GREY_LEVEL+1),	histeq_mapMn);
 
 		//show cdf of image
-		string t_name(winP2 + " cdf ");
-		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name, 800, 300+SCR_Y_OFFSET);
-		
-		//show the image, the histogram equlization of Image I
-		IplImage* imgHE = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-		cvSetData(imgHE, buf_he, WIDTH);
-		namedWindow( winP2 + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-		moveWindow( winP2 + "Hist eq", 1050,300+SCR_Y_OFFSET);
-		string winP2I = winP2 + "Hist eq";
-		char win_hname[100];
-		strcpy(win_hname, winP2I.c_str());
-		cvShowImage( win_hname, imgHE );                   // Show our image inside it.
-		
+		string  wname_mnCDF("bonus mean : cdf ");
+		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_mnCDF, 0+SCR_X_OFFSET,
+				WIN_GAP_Y*1+SCR_Y_OFFSET);
+
+		//show histogram equlization of the mean image
+		string wnameHE("bonus mean : Hist eq");
+		IplImage *imgHE = cvDisplay(buf_he, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameHE, cvFlag);
+
 		//PSNR
 		char psnr_str[100];
 		float psnr = PSNR(bufRaw, buf_he, WIDTH, HEIGHT);
 		sprintf(psnr_str, "PSNR of mean=%f", psnr);
-		cvPrintf(imgBar, psnr_str, cvPoint(1, 80),
-									cvFont(1.0, 1.0), CV_RGB(255,255,255));
+		cvPrintf(imgBar, psnr_str, cvPoint(1, 80));
 		cvShowImage( track_bar_name.c_str(), imgBar);
 	}
-#if 0	
-	//diff src and filtered image
-	img_diff(bufRaw, buf_work, buf_diff, WIDTH, HEIGHT);
-	cvSetData(imgP2D, buf_diff, WIDTH);
-	//show the diff image
-	winP2D = (winP2D + problem) + " diff";
-	namedWindow( winP2D, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winP2D, 300,0);
-	cvShowImage( winP2D.c_str(), imgP2D);                   // Show our image inside it.
-#endif
-
 }
 
 /**
@@ -285,7 +258,7 @@ void ProcessDim(int pos, void *userdata)
 int main( int argc, char** argv )
 {
     int fd=-1;
-
+	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
 	if(argc==1){
 		usage(stderr, argc, argv);
 		exit(EXIT_FAILURE);
@@ -323,47 +296,24 @@ int main( int argc, char** argv )
 	cvShowImage( track_bar_name.c_str(), imgBar);
 	//////////////////////////////////////////////////////////////////////////
 	
-	//load raw file
+	//show bonus raw file
 	string folder, winRaw;
 	SplitFilename (raw_file, folder, winRaw);
-	IplImage* imgRaw = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(imgRaw, bufRaw, WIDTH);
-	//show the raw image
-	namedWindow( winRaw, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winRaw, 0,0+SCR_Y_OFFSET);
-	cvShowImage( winRaw.c_str(), imgRaw );                   // Show our image inside it.
+	string wname_bonus = winRaw + ":bonus";
+	IplImage *imgRaw = cvDisplay(bufRaw, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+								   0+SCR_Y_OFFSET, wname_bonus, cvFlag);
 
 	//Problem solution
 	ProcessDim(mask_dim, bufRaw);
-	
-/*
-
-	//create output file H
-	if( (fd = open("H.raw", O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
-		int s=write(fd, bufH, WIDTH * HEIGHT);
-		cout << "write:" << s << endl;
-		close(fd);
-	}else{
-		cout << "H.raw open failed!"  << endl;
-	}
-*/
 
 	cout << "press any key to quit..." << endl;
 	waitKey(0);                                          // Wait for a keystroke in the window
 
-	destroyWindow(winRaw);
-	cvReleaseImageHeader(&imgRaw);
-	free(bufRaw);
-
-#if 0
-	destroyWindow(winP2);
-	cvReleaseImageHeader(&imgP2);
-	free(buf_work);
-
-	destroyWindow(winP2D);
-	cvReleaseImageHeader(&imgP2D);
-	free(buf_diff);
-#endif
+	if(imgRaw){
+		destroyWindow(wname_bonus);
+		cvReleaseImageHeader(&imgRaw);
+		free(imgRaw);
+	}
 
     return 0;
 }

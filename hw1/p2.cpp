@@ -1,6 +1,8 @@
 /** @brief DIP program to flip an image
  * @author <Thomas Tsai, thomas@life100.cc>
  *
+ * ./bin/p2 -n 3 -o 0x600 -p 2a -r ../../assignment/hw1/sample1.raw
+ *
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -33,12 +35,15 @@ char raw_fileD[1024]="sample2.raw";
 char raw_file[1024]="sample3.raw";
 char problem[100]="2a";
 int mask_dim=3;
+int add_noise=0;
+
 static void usage(FILE *fp, int argc, char **argv)
 {
 	fprintf(fp,
 		 "Usage: %s [options]\n\n"
 		 "Options:\n"
 		 "-h | --help        Print this message\n"
+		 "-a | --add         Adding noise to raw image\n"
 		 "-n | --dim     n   nxn mask\n"
 		 "-o | --offset  mxn The screen offset for dual screen\n"
 		 "-p | --problem 2a  The problem 2a,2b,2c... to solve\n"
@@ -47,10 +52,11 @@ static void usage(FILE *fp, int argc, char **argv)
 		 argv[0]);
 }
 
-static const char short_options[] = "hn:o:p:r:";
+static const char short_options[] = "ahn:o:p:r:";
 
 static const struct option
 long_options[] = {
+	{ "add",   		no_argument,       NULL, 'a' },
 	{ "help",   	no_argument,       NULL, 'h' },
 	{ "dim",		required_argument, NULL, 'n' },
 	{ "offset",		required_argument, NULL, 'o' },
@@ -75,6 +81,9 @@ static int option(int argc, char **argv)
 
 		switch (c) {
 		case 0: /* getopt_long() flag */
+			break;
+		case 'a':
+			add_noise=1;
 			break;
 		case 'n':
 			errno = 0;
@@ -161,7 +170,7 @@ void impulse_bchange(int pos, void *userdata)
 	uint8_t *bufRaw=(uint8_t *)userdata;
 	buf_addImp= (uint8_t *)realloc(buf_addImp, WIDTH * HEIGHT);
 	memcpy(buf_addImp,bufRaw, WIDTH * HEIGHT);
-	impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
+	if(add_noise) impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
 
 	cvSetData(imgImpAdd, buf_addImp, WIDTH);
 	namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
@@ -190,7 +199,7 @@ void impulse_wchange(int pos, void *userdata)
 	//add impulse noise to image
 	buf_addImp= (uint8_t *)realloc(buf_addImp, WIDTH * HEIGHT);
 	memcpy(buf_addImp,bufRaw, WIDTH * HEIGHT);
-	impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
+	if(add_noise)	impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
 
 	cvSetData(imgImpAdd, buf_addImp, WIDTH);
 	namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
@@ -235,7 +244,7 @@ void whiten_wchange(int pos, void *userdata)
 	memcpy(buf_addWhite,bufRaw, WIDTH * HEIGHT);
 
 	//adding noise to image I
-	white_noise_add(white_buf, buf_addWhite, HEIGHT, WIDTH);
+	if(add_noise) white_noise_add(white_buf, buf_addWhite, HEIGHT, WIDTH);
 
 	cvSetData(imgWhiteAdd, buf_addWhite, WIDTH);
 	namedWindow("white noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
@@ -325,7 +334,7 @@ int main( int argc, char** argv )
 	cv::namedWindow("noise_tune", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
 	imgBar = cvCreateImage(cvSize(512, 512), IPL_DEPTH_8U, 3);
 	cvSetZero(imgBar);
-	cv::createTrackbar("dimension", "noise_tune", &mask_dim, MAX_DIM, ProcessDim, 
+	cv::createTrackbar("kernel dimension", "noise_tune", &mask_dim, MAX_DIM, ProcessDim, 
 						bufRaw);
 	cv::createTrackbar("imp black threshold <", "noise_tune", &black_thr, MAX_GREY_LEVEL, 
 					   impulse_bchange, bufRaw);
@@ -340,16 +349,6 @@ int main( int argc, char** argv )
 	////////////////////////////////////////////
 
 	string winP2="P", winP2D="P";
-	/*
-	//diff src and filtered image
-	img_diff(bufRaw, buf_work, buf_diff, WIDTH, HEIGHT);
-	cvSetData(imgP2D, buf_diff, WIDTH);
-	//show the diff image
-	winP2D = (winP2D + problem) + " diff";
-	namedWindow( winP2D, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winP2D, 300,0+SCR_Y_OFFSET);
-	cvShowImage( winP2D.c_str(), imgP2D);                   // Show our image inside it.
-	*/
 	
 /*
 

@@ -1,6 +1,7 @@
 /** @brief DIP program to flip an image
+ * ./bin/p1 -n 17 -o 0x600 -I ../../assignment/hw1/sample1.raw -D ../../assignment/hw1/sample2.raw 
+ *
  * @author <Thomas Tsai, thomas@life100.cc>
- * 
  */
 #include <stdio.h>
 #include <sys/types.h>
