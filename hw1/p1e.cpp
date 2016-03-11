@@ -23,7 +23,11 @@ using namespace std;
 
 //MAX kernel matrix dimension
 #define	POWER_MAX	(300)
+#define	LOGT_MAX	(400)
+#define	ILOGT_MAX	(400)
 #define	POWER_DIV	(100.0f)
+#define	LOGT_DIV	(50.0f)
+#define	ILOGT_DIV	(50.0f)
 
 #define	WIN_GAP_X	(280)
 #define	WIN_GAP_Y	(300)
@@ -139,12 +143,7 @@ void PowerLawTransform(int pos, void *userdata)
 	string wname_D("D:");
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
 	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
-	if(pos < 3 ) {
-		pos=3;
-	}
-	if((pos%2)==0) {
-		pos--;//only odd dim is allowed!
-	}
+
 	mask_dim = pos;
 	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
 
@@ -187,18 +186,13 @@ void LogTransform(int pos, void *userdata)
 	string wname_D("D:");
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
 	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
-	if(pos < 3 ) {
-		pos=3;
-	}
-	if((pos%2)==0) {
-		pos--;//only odd dim is allowed!
-	}
+
 	mask_dim = pos;
 	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
 
 	//2. perform log transform
 	bufDL=(uint8_t *)realloc(bufDL, WIDTH * HEIGHT);
-	log_transform(bufD, bufDL, WIDTH * HEIGHT, pos/10.0f);
+	log_transform(bufD, bufDL, WIDTH * HEIGHT, pos/LOGT_DIV);
 	string wname_DL = wname_D + ": log transform";
 	IplImage * imgDL= cvDisplay(bufDL, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
 								SCR_Y_OFFSET+SCR_Y_OFFSET, wname_DL, cvFlag);
@@ -236,16 +230,10 @@ void InvLogTransform(int pos, void *userdata)
 	string wname_D("D:");
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
 	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
-	if(pos < 3 ) {
-		pos=3;
-	}
-	if((pos%2)==0) {
-		pos--;//only odd dim is allowed!
-	}
 
 	//3. perform inverse/exponential log transform
 	bufDExp=(uint8_t *)realloc(bufDExp, WIDTH * HEIGHT);
-	invLog_transform(bufD, bufDExp, WIDTH * HEIGHT, pos/10.0f);
+	invLog_transform(bufD, bufDExp, WIDTH * HEIGHT, pos/ILOGT_DIV);
 	string wname_DExp = wname_D + ": Inv log transform";
 	IplImage * imgDExp= cvDisplay(bufDExp, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
 								SCR_Y_OFFSET+SCR_Y_OFFSET, wname_DExp, cvFlag);
@@ -341,9 +329,9 @@ int main( int argc, char** argv )
 	cv::namedWindow(wname_contrastT, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
 	cv::createTrackbar("power law step/100", wname_contrastT, &mask_dim, POWER_MAX, PowerLawTransform, 
 						bufD);
-	cv::createTrackbar("log tranform step/100", wname_contrastT, &mask_dim, POWER_MAX, LogTransform, 
+	cv::createTrackbar("log tranform step/50", wname_contrastT, &mask_dim, LOGT_MAX, LogTransform, 
 						bufD);
-	cv::createTrackbar("Inv log tranform step/100", wname_contrastT, &mask_dim, POWER_MAX, InvLogTransform, 
+	cv::createTrackbar("Inv log tranform step/50", wname_contrastT, &mask_dim, ILOGT_MAX, InvLogTransform, 
 						bufD);
 	moveWindow(wname_contrastT, WIN_GAP_X*3+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
 	PowerLawTransform(mask_dim, bufD);//init before use interactive
