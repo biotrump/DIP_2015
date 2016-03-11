@@ -21,6 +21,9 @@ using namespace cv;
 using namespace std;
 
 #include "dip.h"
+#include "helper.h"
+//MAX kernel matrix dimension
+#define	MAX_DIM		(33)
 
 char raw_file[1024];
 char problem[100]="2a";
@@ -187,7 +190,7 @@ void ProcessDim(int pos, void *userdata)
 		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
 		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
 		hist_eq(buf_worka, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-				(MAX_GREY_LEVEL+1),	histeq_mapI, winP2);
+				(MAX_GREY_LEVEL+1),	histeq_mapI);
 
 		//show cdf of image
 		string t_name(winP2 + " cdf ");
@@ -239,7 +242,7 @@ void ProcessDim(int pos, void *userdata)
 		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
 		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
 		hist_eq(buf_workb, buf_he,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-				(MAX_GREY_LEVEL+1),	histeq_mapI, winP2);
+				(MAX_GREY_LEVEL+1),	histeq_mapI);
 
 		//show cdf of image
 		string t_name(winP2 + " cdf ");
@@ -308,8 +311,9 @@ int main( int argc, char** argv )
 		cout << raw_file << " opening failure!:"<< errno << endl;
 		exit(EXIT_FAILURE);
 	}
-	/////////////////////////////////////
-	//tracking bar to set dimension of kernel matrix
+	
+	//////////////////////////////////////////////////////////////////////////
+	//GUI: tracking bar to adjust the dimension of kernel matrix
 	imgBar = cvCreateImage(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 3);
 	cvSetZero(imgBar);
 	cv::namedWindow(track_bar_name, WINDOW_AUTOSIZE);
@@ -317,6 +321,7 @@ int main( int argc, char** argv )
 						bufRaw);
 	moveWindow(track_bar_name, 1300,0+SCR_Y_OFFSET);
 	cvShowImage( track_bar_name.c_str(), imgBar);
+	//////////////////////////////////////////////////////////////////////////
 	
 	//load raw file
 	string folder, winRaw;

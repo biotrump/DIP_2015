@@ -18,32 +18,40 @@
 using namespace cv;
 using namespace std;
 #include "dip.h"
+#include "helper.h"
 
-const char org_display[]="Original Display";
-const char flip_v[]="vertically flipped";
-const char flip_h[]="horizontally flipped";
+//MAX kernel matrix dimension
+#define	MAX_DIM		(255)
+
+#define	WIN_GAP_X	(280)
+#define	WIN_GAP_Y	(300)
 
 char raw_win_nameD[1024]="sample2.raw";
 char raw_fileI[1024]="sample1.raw";
+int mask_dim=3;
 
 static void usage(FILE *fp, int argc, char **argv)
 {
 	fprintf(fp,
 		 "Usage: %s [options]\n\n"
 		 "Options:\n"
-		 "-h | --help       Print this message\n"
-		 "-D | --rawD    The full path of the raw file D \n"
-		 "-I | --rawI    The full path of the raw file I \n"
+		 "-h | --help        Print this message\n"
+		 "-D | --rawD        The full path of the raw file D \n"
+		 "-I | --rawI        The full path of the raw file I \n"
+		 "-n | --dim     n   nxn mask\n"
+		 "-o | --offset  mxn The screen offset for dual screen\n"
 		 "",
 		 argv[0]);
 }
 
-static const char short_options[] = "D:hI:v";
+static const char short_options[] = "D:hI:n:o:v";
 
 static const struct option
 long_options[] = {
-	{ "help",   	no_argument,       NULL, 'h' },
 	{ "rawD",		required_argument, NULL, 'D' },
+	{ "dim",		required_argument, NULL, 'n' },
+	{ "help",   	no_argument,       NULL, 'h' },
+	{ "offset",		required_argument, NULL, 'o' },
 	{ "rawI",		required_argument, NULL, 'I' },
 	{ 0, 0, 0, 0 }
 };
@@ -85,7 +93,26 @@ static int option(int argc, char **argv)
 			usage(stdout, argc, argv);
 			r=1;
 			break;
-
+		case 'n':
+			errno = 0;
+			mask_dim = atoi(optarg);
+			printf("mask_dim=%d\n", mask_dim);
+			if (errno){
+				r=-1;
+			}
+			break;			
+		case 'o':
+			if(optarg && strlen(optarg)){
+				int i=0;
+				printf("screen offset:%s\n",optarg);
+				while(optarg[i] && optarg[i] !='x') i++;
+				if(optarg[i] =='x') {
+					optarg[i]=' ';//delimeter
+					sscanf(optarg,"%d %d", &SCR_X_OFFSET, &SCR_Y_OFFSET);
+					printf("SCR_X_OFFSET=%d, SCR_Y_OFFSET=%d\n", SCR_X_OFFSET, SCR_Y_OFFSET);
+				}
+			}
+			break;
 		default:
 			usage(stderr, argc, argv);
 			r=-1;
@@ -95,12 +122,70 @@ static int option(int argc, char **argv)
 	return r;
 }
 
+/** @brief performing local histogram equalization
+ * 
+ * 
+ */
+IplImage * imgL=NULL;
+uint8_t *buf_lhe=NULL;
+string wname_L;
+void ProcessDim(int pos, void *userdata)
+{
+	uint8_t *bufD = (uint8_t *)userdata;
+	string wname_D(":");
+	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
+	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	if(pos < 3 ) {
+		pos=3;
+	}
+	if((pos%2)==0) {
+		pos--;//only odd dim is allowed!
+	}
+	mask_dim = pos;
+	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+
+	//local histogram equlization to Image D
+	buf_lhe= (uint8_t *)realloc( buf_lhe, WIDTH * HEIGHT);
+	string wname_Dlhe=wname_D + " lhe ";
+	local_hist_eq(bufD, buf_lhe,  WIDTH, HEIGHT,
+			MAX_GREY_LEVEL,	mask_dim, wname_Dlhe);
+
+	//show image L, the local histogram equalization of image D
+	wname_L =  wname_D + " L: local Hist eq";	
+	imgL= cvDisplay(buf_lhe, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,WIN_GAP_Y*2+SCR_Y_OFFSET, 
+						wname_L, cvFlag);
+
+	//show histogram of image L
+	unsigned hist_tableL[(MAX_GREY_LEVEL+1)],cdf_tableL[(MAX_GREY_LEVEL+1)];
+	hist(hist_tableL, (MAX_GREY_LEVEL+1), buf_lhe, WIDTH, HEIGHT);
+	string wname_Lhist =  wname_D + " L: Hist";
+	draw_hist(hist_tableL, (MAX_GREY_LEVEL+1), wname_Lhist, WIN_GAP_X+SCR_X_OFFSET,WIN_GAP_Y*2+SCR_Y_OFFSET,
+		cvFlag);
+
+	//show cdf of image L
+	hist_cdf(hist_tableL, cdf_tableL, (MAX_GREY_LEVEL+1) , WIDTH * HEIGHT);
+	string wname_Lcdf = wname_D + " L: cdf ";
+	draw_hist(cdf_tableL, (MAX_GREY_LEVEL+1), wname_Lcdf, 0+SCR_X_OFFSET ,WIN_GAP_Y*2+SCR_Y_OFFSET,
+		cvFlag,Scalar( 0, 0 , 255) );
+
+	int fd=-1;
+	//create output file L
+	if( (fd = open("L.raw", O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+		int s=write(fd, buf_lhe, WIDTH * HEIGHT);
+		cout << "write:" << s << endl;
+		close(fd);
+	}else{
+		cout << "L.raw open failed!"  << endl;
+	}
+}
+
 /**
  *
  */
 int main( int argc, char** argv )
 {
     int fd=-1;
+	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
 	
 	if(argc==1){
 		usage(stderr, argc, argv);
@@ -116,7 +201,7 @@ int main( int argc, char** argv )
 		exit(EXIT_FAILURE);
 	}
 
-	//opening file I and file D
+	//loading file I and file D
 	printf("I:%s\nD:%s\n", raw_fileI, raw_win_nameD);
 	uint8_t *bufI=NULL, *bufD=NULL, *bufH=NULL, *bufL=NULL;
 	if( (fd = open(raw_fileI, O_RDONLY)) != -1 ){
@@ -139,78 +224,59 @@ int main( int argc, char** argv )
 		exit(EXIT_FAILURE);
 	}
 
-	//load raw file I
-	string folder, fileI, win_nameD;
-	SplitFilename (raw_fileI, folder, fileI);
-	IplImage* org_imgI = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(org_imgI, bufI, WIDTH);
-	//show the raw image I
-	namedWindow( fileI, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow(fileI, 100,100);
-	cvShowImage( fileI.c_str(), org_imgI );                   // Show our image inside it.
+	//show raw file I
+	string folder, fileI;
+	string wname_I, wname_Ip;
+	SplitFilename (raw_fileI, folder, wname_I);
+	wname_Ip = wname_I + ": I";
+	IplImage * imgI= cvDisplay(bufI, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,0+SCR_Y_OFFSET, 
+						wname_Ip, cvFlag);
 
 	//show histogram of image I
 	unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
 	uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
 	hist(hist_tableI, (MAX_GREY_LEVEL+1), bufI, WIDTH, HEIGHT);
-	draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), fileI, 250, 250);
+	string wname_Ihist = wname_I + " I: hist ";
+	draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), wname_Ihist, WIN_GAP_X*4, 0+SCR_Y_OFFSET, cvFlag);
 
 	//histogram equlization of Image I
 	uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
 	unsigned cdf_table[(MAX_GREY_LEVEL+1)];
 	hist_eq(bufI, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-			(MAX_GREY_LEVEL+1),	histeq_mapI, fileI);
+			(MAX_GREY_LEVEL+1),	histeq_mapI);
 
 	//show cdf of image I
-	string t_name(fileI + " cdf ");
-	draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name/*, int wx=300, int wy=300*/);
+	string wname_Icdf = wname_I + " I: cdf ";
+	draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_Icdf,WIN_GAP_X*5+SCR_X_OFFSET, 0+SCR_Y_OFFSET,
+		cvFlag, Scalar( 0, 0 , 255)	);
 	
 	//show the image II, the histogram equlization of Image I
-	IplImage* imgII = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(imgII, bufII, WIDTH);
-	namedWindow( fileI + "Hist eq", CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow( fileI + "Hist eq", 250,250);
-	string fileII = fileI + "Hist eq";
-	char win_hname[100];
-	strcpy(win_hname, fileII.c_str());
-	cvShowImage( win_hname, imgII );                   // Show our image inside it.
-	
-	//load raw file D
-	SplitFilename (raw_win_nameD, folder, win_nameD);
-	IplImage* org_imgD = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(org_imgD, bufD, WIDTH);
-	//show the image D
-	namedWindow( win_nameD, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow(win_nameD, 250,250);
-	cvShowImage( win_nameD.c_str(), org_imgD );                   // Show our image inside it.
+	string wname_II;
+	wname_II = wname_I + " II: hist eq";
+	IplImage * imgII= cvDisplay(bufII, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET, 
+						wname_II, cvFlag);
 
+	//show raw image D
+	string wname_D, wname_Dp;
+	SplitFilename (raw_win_nameD, folder, wname_D);
+	wname_Dp = wname_D + ": D";
+	IplImage * imgD= cvDisplay(bufD, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,0+SCR_Y_OFFSET, 
+						wname_Dp, cvFlag);
+	
 	//show histogram of image D
 	unsigned hist_tableD[(MAX_GREY_LEVEL+1)];
 	uint8_t histeq_mapH[(MAX_GREY_LEVEL+1)];
+	//get histogram of D
 	hist(hist_tableD, (MAX_GREY_LEVEL+1), bufD, WIDTH, HEIGHT);
-	draw_hist(hist_tableD, (MAX_GREY_LEVEL+1), win_nameD, 350,250);
+	//draw the histogram
+	string wname_Dhist = wname_D + " D: hist ";
+	draw_hist(hist_tableD, (MAX_GREY_LEVEL+1), wname_Dhist, WIN_GAP_X+SCR_X_OFFSET ,0+SCR_Y_OFFSET,
+		cvFlag);
 
 	//histogram equlization of image D
 	bufH= (uint8_t *)malloc( WIDTH * HEIGHT);
 	hist_eq(bufD, bufH,  WIDTH * HEIGHT, hist_tableD, cdf_table,
-			(MAX_GREY_LEVEL+1),	histeq_mapH, win_nameD);
-
-	//show cdf of image D
-	t_name=win_nameD + " cdf ";
-	draw_hist(cdf_table, (MAX_GREY_LEVEL+1), t_name/*, int wx=300, int wy=300*/);
-
-	//show image H, the histogram equlization of image D
-	IplImage* imgH = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	cvSetData(imgH, bufH, WIDTH);
-	string win_nameH =  win_nameD + "Hist eq";
-	namedWindow( win_nameH, CV_WINDOW_AUTOSIZE );	// Create a window for display.
-	moveWindow( win_nameH, 250,250);
-	strcpy(win_hname, win_nameH.c_str());
-	cvShowImage( win_hname, imgH );                   // Show our image inside it.
-	//show histogram of image H
-	unsigned hist_tableH[(MAX_GREY_LEVEL+1)];
-	hist(hist_tableH, (MAX_GREY_LEVEL+1), bufH, WIDTH, HEIGHT);
-	draw_hist(hist_tableH, (MAX_GREY_LEVEL+1), win_nameH, 350,250);
+			(MAX_GREY_LEVEL+1),	histeq_mapH);
 
 	//create output file H
 	if( (fd = open("H.raw", O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
@@ -221,22 +287,106 @@ int main( int argc, char** argv )
 		cout << "H.raw open failed!"  << endl;
 	}
 
+	//show cdf of image D
+	string wname_Dcdf = wname_D + " D: cdf ";
+	draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_Dcdf, 0+SCR_X_OFFSET ,0+SCR_Y_OFFSET,
+		cvFlag, Scalar( 0, 0 , 255) );
+
+	//show image H, the histogram equlization of image D
+	string wname_H =  wname_D + " H: Hist eq";
+	IplImage *imgH= cvDisplay(bufH, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET, 
+						wname_H, cvFlag);
+	//show histogram of image H
+	unsigned hist_tableH[(MAX_GREY_LEVEL+1)], cdf_tableH[(MAX_GREY_LEVEL+1)];
+	hist(hist_tableH, (MAX_GREY_LEVEL+1), bufH, WIDTH, HEIGHT);
+	string wname_Hhist =  wname_D + " H: Hist";
+	draw_hist(hist_tableH, (MAX_GREY_LEVEL+1), wname_Hhist, WIN_GAP_X*1+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET,cvFlag);
+
+	//show cdf of image H
+	hist_cdf(hist_tableH, cdf_tableH, (MAX_GREY_LEVEL+1) , WIDTH * HEIGHT);
+	string wname_Hcdf = wname_D + " H: cdf ";
+	draw_hist(cdf_tableH, (MAX_GREY_LEVEL+1), wname_Hcdf, 0+SCR_X_OFFSET ,WIN_GAP_Y+SCR_Y_OFFSET,
+		cvFlag, Scalar( 0, 0 , 255) );
+
+	////////////////////////////////////////////
+	// dim of local histogram equalization
+	// performing local histogram equalization
+	string wname_dim("local histogram equalization");
+	cv::namedWindow(wname_dim, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
+	cv::createTrackbar("dimension", wname_dim, &mask_dim, MAX_DIM, ProcessDim, 
+						bufD);
+	moveWindow(wname_dim, WIN_GAP_X*3+SCR_X_OFFSET,WIN_GAP_Y*2+SCR_Y_OFFSET);
+	ProcessDim(mask_dim, bufD);//init before use interactive
+	////////////////////////////////////////////
+#if 0
+	//local histogram equlization to Image D
+	uint8_t *buf_lhe= (uint8_t *)malloc( WIDTH * HEIGHT);
+	string wname_Dlhe=wname_D + " lhe ";
+	local_hist_eq(bufD, buf_lhe,  WIDTH, HEIGHT,
+			MAX_GREY_LEVEL,	mask_dim, wname_Dlhe);
+	
+	//show image L, the local histogram equalization of image D
+	string wname_L =  wname_D + " L: local Hist eq";	
+	IplImage * imgL= cvDisplay(buf_lhe, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,WIN_GAP_Y*2+SCR_Y_OFFSET, 
+						wname_L, cvFlag);
+
+	//show histogram of image L
+	unsigned hist_tableL[(MAX_GREY_LEVEL+1)],cdf_tableL[(MAX_GREY_LEVEL+1)];
+	hist(hist_tableL, (MAX_GREY_LEVEL+1), buf_lhe, WIDTH, HEIGHT);
+	string wname_Lhist =  wname_D + " L: Hist";
+	draw_hist(hist_tableL, (MAX_GREY_LEVEL+1), wname_Lhist, WIN_GAP_X+SCR_X_OFFSET,WIN_GAP_Y*2+SCR_Y_OFFSET,
+		cvFlag);
+
+	//show cdf of image L
+	hist_cdf(hist_tableL, cdf_tableL, (MAX_GREY_LEVEL+1) , WIDTH * HEIGHT);
+	string wname_Lcdf = wname_D + " L: cdf ";
+	draw_hist(cdf_tableL, (MAX_GREY_LEVEL+1), wname_Lcdf, 0+SCR_X_OFFSET ,WIN_GAP_Y*2+SCR_Y_OFFSET,
+		cvFlag,Scalar( 0, 0 , 255) );
+	
+	//create output file L
+	if( (fd = open("L.raw", O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+		int s=write(fd, buf_lhe, WIDTH * HEIGHT);
+		cout << "write:" << s << endl;
+		close(fd);
+	}else{
+		cout << "L.raw open failed!"  << endl;
+	}
+#endif
 	cout << "press any key to quit..." << endl;
 	waitKey(0);                                          // Wait for a keystroke in the window
+	if(imgL){
+		cvReleaseImageHeader(&imgL);
+		destroyWindow(wname_L);
+		free(buf_lhe);
+	}
+	if(imgH){
+		cvReleaseImageHeader(&imgH);
+		destroyWindow(wname_H);
+		free(bufH);
+	}
 
-	cvDestroyWindow(fileI.c_str());
-	cvReleaseImageHeader(&org_imgI);
+	destroyWindow(fileI);
+	cvReleaseImageHeader(&imgI);
 	free(bufI);
 
-	cvDestroyWindow(win_nameD.c_str());
-	cvReleaseImageHeader(&org_imgD);
-	free(bufD);
+	if(imgD){
+		destroyWindow(wname_Dp);
+		cvReleaseImageHeader(&imgD);
+		free(bufD);
+	}
+	
+	if(imgI){
+		destroyWindow(wname_Ip);
+		cvReleaseImageHeader(&imgI);
+		free(bufD);
+	}
+	if(imgII){
+		destroyWindow(wname_II);
+		cvReleaseImageHeader(&imgII);
+		free(bufII);		
+	}
 
-	destroyWindow(fileII);
-	cvReleaseImageHeader(&imgII);
-	free(bufII);
-
-	destroyWindow(win_nameH);
+	destroyWindow(wname_H);
 	cvReleaseImageHeader(&imgH);
 	free(bufH);
 	

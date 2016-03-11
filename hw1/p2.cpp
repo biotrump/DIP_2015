@@ -21,6 +21,9 @@ using namespace cv;
 using namespace std;
 
 #include "dip.h"
+#include "helper.h"
+//MAX kernel matrix dimension
+#define	MAX_DIM		(33)
 
 const char org_display[]="Original Display";
 const char flip_v[]="vertically flipped";
@@ -30,17 +33,16 @@ char raw_fileD[1024]="sample2.raw";
 char raw_file[1024]="sample3.raw";
 char problem[100]="2a";
 int mask_dim=3;
-
 static void usage(FILE *fp, int argc, char **argv)
 {
 	fprintf(fp,
 		 "Usage: %s [options]\n\n"
 		 "Options:\n"
-		 "-h | --help       Print this message\n"
-		 "-n | --dim	n	nxn mask\n"
-		 "-o | --offset	 mxn The screen offset for dual screen\n"
-		 "-p | --problem 2a The problem 2a,2b,2c... to solve\n"
-		 "-r | --raw	    The full path of the raw file \n"
+		 "-h | --help        Print this message\n"
+		 "-n | --dim     n   nxn mask\n"
+		 "-o | --offset  mxn The screen offset for dual screen\n"
+		 "-p | --problem 2a  The problem 2a,2b,2c... to solve\n"
+		 "-r | --raw	     The full path of the raw file \n"
 		 "",
 		 argv[0]);
 }

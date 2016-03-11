@@ -147,6 +147,7 @@ target_link_libraries(raw_show
 # --------------------------------------------------
 add_executable(flip
 	dip-lib.cpp
+	helper.cpp
 	flip.cpp
 )
 qt5_use_modules(flip Widgets  OpenGL Test Concurrent)
@@ -158,6 +159,7 @@ target_link_libraries(flip
 # --------------------------------------------------
 add_executable(p1
 	dip-lib.cpp
+	helper.cpp
 	p1.cpp
 )
 qt5_use_modules(p1 Widgets  OpenGL Test Concurrent)
@@ -169,6 +171,7 @@ target_link_libraries(p1
 # --------------------------------------------------
 add_executable(p2
 	dip-lib.cpp
+	helper.cpp
 	p2.cpp
 )
 qt5_use_modules(p2 Widgets  OpenGL Test Concurrent)
@@ -180,6 +183,7 @@ target_link_libraries(p2
 # --------------------------------------------------
 add_executable(bonus
 	dip-lib.cpp
+	helper.cpp
 	bonus.cpp
 )
 qt5_use_modules(bonus Widgets  OpenGL Test Concurrent)

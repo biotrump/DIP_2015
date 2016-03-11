@@ -1,4 +1,4 @@
-/** @brief All dip implementations are collected in this DIP library
+/** @brief The implementations of DIP are collected in this DIP library.
  * @author : <Thomas Tsai, d04922009@ntu.edu.tw>
  *
  */
@@ -24,18 +24,6 @@ using namespace std;
 #include "dip.h"
 
 int SCR_X_OFFSET=0, SCR_Y_OFFSET=0;
-
-//http://stackoverflow.com/questions/3071665/getting-a-directory-name-from-a-filename
-void SplitFilename (const string& str, string &folder, string &file)
-{
-	size_t found;
-	cout << "Splitting: " << str << endl;
-	found=str.find_last_of("/\\");
-	folder = str.substr(0,found);
-	file = str.substr(found+1);
-	cout << " folder: " << str.substr(0,found) << endl;
-	cout << " file: " << str.substr(found+1) << endl;
-}
 
 /** @brief flipping the image
  * org : input
@@ -249,7 +237,7 @@ void median(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 	 free(pad_buf);
 }
 
-/** @brif media filter
+/** @brif median filter
  * dim : dim x dim mask kernel, dim is "odd"
  *
  */
@@ -289,7 +277,7 @@ void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim)
  */
 int hist(unsigned *hist_table, int h_size, uint8_t *image, int width, int height)
 {
-	memset((void *)hist_table, 0, MAX_GREY_LEVEL * sizeof(unsigned));
+	for(int i = 0; i < h_size; i++) hist_table[i]=0;
 	for(int i = 0 ; i < height*width ; i ++){
 		//printf("0x%x ", image[i]);
 		hist_table[image[i]]++;
@@ -311,17 +299,16 @@ int hist(unsigned *hist_table, int h_size, uint8_t *image, int width, int height
  * cdf_table[] : cdf of the hist_table
  * h_size : size of histogram, it's usually 256 for 8 bit grey image
  * histeq_map : the histogram equalization mapping table
- * name : name of window to show
  */
 void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
-			 unsigned *cdf_table, int h_size, uint8_t *histeq_map, string &name)
+			 unsigned *cdf_table, int h_size, uint8_t *histeq_map)
 {
 	unsigned cdf=0;
 	//calculate CDF without normalization from 0 to 1.0, but in 0 to pixels
 	for(int i=0;i < h_size ; i++ ){
 		cdf += hist_table[i];
 		cdf_table[i] = cdf;
-		histeq_map[i] = (255 * cdf)  / pixels ;//mapping grey level i to new grey level
+		histeq_map[i] = (MAX_GREY_LEVEL * cdf)  / pixels ;//mapping grey level i to new grey level
 		//printf("%d->%d\n", i, histeq_map[i]);
 	}
 
@@ -330,59 +317,81 @@ void hist_eq(uint8_t *src, uint8_t *dst, int pixels, unsigned *hist_table,
 		dst[i] = histeq_map[src[i]];	//mapping original grey level to new level
 }
 
-/** @brief Draw the histograms
- * input 
- * hist_table[] : histogram table 
- * h_size : level of histogram table, ie, 256 grey levels
- */
-void draw_hist(unsigned *hist_table, int h_size, const string &t_name, int wx, int wy)
-{
-	float ht[MAX_GREY_LEVEL];
-	for(int i = 0; i < h_size; i ++)
-		ht[i] = hist_table[i];
-	//create a openCV matrix from an array : 1xh_size, floating point array
-	Mat b_hist=Mat(1, h_size, CV_32FC1, ht);
-	//calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-
-	int hist_w = HIST_WIN_WIDTH, hist_h = HIST_WIN_HEIGHT;
-	int bin_w = cvRound( (double) hist_w/h_size );
-
-	Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
-	
-	// Normalize the result to [ 0, histImage.rows ]
-	normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-	for( int i = 1; i < h_size; i++ )
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
-                     Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
-                     Scalar( 255, 0, 0), 2, 8, 0  );
-	string win_name("Histogram: ");
-	win_name = win_name + t_name;
-
-	namedWindow(win_name, CV_WINDOW_AUTOSIZE );
-	moveWindow(win_name, wx,wy);
-	imshow(win_name, histImage );
-}
-
-/* opencv
+/** @brief calculate cdf from hist and output the histogram mapping table
+ * for histogram equalization
  * 
  */
-void cvPrintf(IplImage* img, const char *text, CvPoint TextPosition, CvFont Font1,
-			  CvScalar Color)
+void hist_cdf(unsigned *hist_table, unsigned *cdf_table, int h_size, 
+		int pixels, uint8_t *histeq_map)
 {
-  //char text[] = "Funny text inside the box";
-  //int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
-  //double fontScale = 2;
+	unsigned cdf=0;
+	//calculate CDF without normalization from 0 to 1.0, but in 0 to pixels
+	for(int i=0;i < h_size ; i++ ){
+		cdf += hist_table[i];
+		cdf_table[i] = cdf;
+		if(histeq_map)
+			histeq_map[i] = (MAX_GREY_LEVEL * cdf)  / pixels ;//mapping grey level i to new grey level
+		//printf("%d->%d\n", i, histeq_map[i]);
+	}
+}
+/** @brief local histogram equlization
+ * http://angeljohnsy.blogspot.com/2011/06/local-histogram-equalization.html
+ * For every pixel, based on the neighbor hood value the histogram equalization is done. 
+ * Here I used 3 by 3 window matrix for explanation. By changing the window matrix size, 
+ * the histogram equalization can be enhanced. By changing the values of M and N the window 
+ * size can be changed in the code given below.
+ * 
+ * mapping original hist_table to new table histeq_map
+ * input :
+ * src[] : grey image
+ * dst[] : the destination buffer after local histogram equalization
+ * width, height : dimension of the image
+ * max_grey_level : max_grey_level, default is 0-255
+ * lM: the local matrix MxM to perform local H.E., odd is better!
+ * name : The name of window to show
+ */
+void local_hist_eq(uint8_t *src, uint8_t *dst, int width, int height,
+				    int max_grey_level, int lM , string &name)
+{
+	unsigned pixels=lM*lM;
+	unsigned cdf=0;
+	unsigned *hist_table=new unsigned[max_grey_level+1];
+	//unsigned *cdf_table=new unsigned[max_grey_level+1];
+	//padding borders
+	uint8_t window[pixels];
+	int pad = (lM / 2);
+	uint8_t *pad_buf=NULL;
+	//expand source image by padding borders
+	int pw=width + 2*pad;
+	int ph=height + 2*pad;
+	pad_buf = boundary_ext(src, width, height, pad, "lhe");
 
-  // center the text
-  //Point textOrg((img.cols - textSize.width)/2,
-	//			(img.rows + textSize.height)/2);
+	for(int y=0; y < height;y++)
+		for(int x = 0 ; x < width ; x++){
+			//clear tables
+			std::fill_n(hist_table, max_grey_level+1, 0);
+			//std::fill_n(cdf_table, max_grey_level+1, 0);
 
-  //double Scale=2.0;
-  //int Thickness=2;
-  //CvScalar Color=CV_RGB(255,0,0);
-  //CvPoint TextPosition=cvPoint(400,50);
-  //CvFont Font1=cvFont(Scale,Thickness);
-  // then put the text itself
-  cvPutText(img, text, TextPosition, &Font1, Color);
-  //cvPutText(img, text, TextPosition, &Font1, CV_RGB(0,255,0));
+			//local histogram : lMxlM
+			for(int ly = 0; ly < lM;ly++)
+				for(int lx = 0;lx < lM; lx++)
+					hist_table[ pad_buf[ (lx+x) + (ly+y) * pw] ]++;
+			//cdf
+			int k = src[x + y * width];
+			cdf = 0;
+			for(int i=0;i <= k ; i++ ){
+				cdf += hist_table[i];
+				//cdf_table[i] = cdf;
+			}
+
+			//local histogram equlization
+			//dst[x + y * width] = cdf_table[src[x + y * width]] * max_grey_level / pixels;
+			dst[x + y * width] = cdf * max_grey_level / pixels;
+		}
+	if(hist_table)
+		delete [] hist_table;
+	//if(cdf_table)
+	//	delete [] cdf_table;
+	if(pad_buf)
+		free(pad_buf);
 }
