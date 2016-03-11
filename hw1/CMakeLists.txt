@@ -130,6 +130,15 @@ if (NOT DOXYGEN_FOUND)
 	)
 	endif (DOXYGEN_FOUND)
 endif ()
+
+# --------------------------------------------------
+# DIP Libs
+# --------------------------------------------------
+ADD_LIBRARY(dip STATIC
+	dip-lib.cpp
+	helper.cpp
+	)
+	
 # --------------------------------------------------
 # Executables
 # --------------------------------------------------
@@ -141,62 +150,58 @@ add_executable(raw_show
 qt5_use_modules(raw_show Widgets  OpenGL Test Concurrent)
 target_link_libraries(raw_show
 	${OpenCV_LIBS}
+	dip
 )
 # --------------------------------------------------
 # To flip a rawfile
 # --------------------------------------------------
 add_executable(flip
-	dip-lib.cpp
-	helper.cpp
 	flip.cpp
 )
 qt5_use_modules(flip Widgets  OpenGL Test Concurrent)
 target_link_libraries(flip
 	${OpenCV_LIBS}
+	dip
 )
 # --------------------------------------------------
 # PROBLEM 1: IMAGE ENHANCEMENT
 # --------------------------------------------------
 add_executable(p1
-	dip-lib.cpp
-	helper.cpp
 	p1.cpp
 )
 qt5_use_modules(p1 Widgets  OpenGL Test Concurrent)
 target_link_libraries(p1
 	${OpenCV_LIBS}
+	dip
 )
 
 add_executable(p1e
-	dip-lib.cpp
-	helper.cpp
 	p1e.cpp
 )
 qt5_use_modules(p1e Widgets  OpenGL Test Concurrent)
 target_link_libraries(p1e
 	${OpenCV_LIBS}
+	dip
 )
 # --------------------------------------------------
 # PROBLEM 2: NOISE REMOVAL
 # --------------------------------------------------
 add_executable(p2
-	dip-lib.cpp
-	helper.cpp
 	p2.cpp
 )
 qt5_use_modules(p2 Widgets  OpenGL Test Concurrent)
 target_link_libraries(p2
 	${OpenCV_LIBS}
+	dip
 )
 # --------------------------------------------------
 # PROBLEM 2: NOISE REMOVAL
 # --------------------------------------------------
 add_executable(bonus
-	dip-lib.cpp
-	helper.cpp
 	bonus.cpp
 )
 qt5_use_modules(bonus Widgets  OpenGL Test Concurrent)
 target_link_libraries(bonus
 	${OpenCV_LIBS}
+	dip
 )
