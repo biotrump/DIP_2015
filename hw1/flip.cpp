@@ -1,5 +1,11 @@
-/** @brief DIP program to flip an image
- * @author <Thomas Tsai, thomas@life100.cc>
+/** @brief WARM-UP: SIMPLE MANIPULATIONS
+ * flip an image horizontally and vertically
+ * usage : ./build/bin/flip path/to/sample1.raw
+ * output image : 
+ *  I_h.raw (flipped horizontally)
+ *  I_v.raw (flipped horizontally)
+ *
+ * @author <Thomas Tsai, d04922009@ntu.edu.tw, thomas@life100.cc>
  * 
  */
 #include <stdio.h>
@@ -52,8 +58,8 @@ int main( int argc, char** argv )
 		//flipping
 		uint8_t *u8_fh= (uint8_t *)malloc( WIDTH * HEIGHT);
 		uint8_t *u8_fv= (uint8_t *)malloc( WIDTH * HEIGHT);
-		flip(u8, u8_fh, 'h');
-		flip(u8, u8_fv, 'v');
+		flip(u8, u8_fh, 'h');//horizontally
+		flip(u8, u8_fv, 'v');//vertically
 	
 		//show horizontally flipped image
 		IplImage* fh_img8u = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);

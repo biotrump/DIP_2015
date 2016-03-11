@@ -1,6 +1,6 @@
-/** @brief DIP program to flip an image
+/** @brief show a raw file
  * @author <Thomas Tsai, thomas@life100.cc>
- * 
+ * ./build/bin/raw_show path/to/file.raw
  */
 #include <stdio.h>
 #include <sys/types.h>
