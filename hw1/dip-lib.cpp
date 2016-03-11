@@ -25,6 +25,53 @@ using namespace std;
 
 int SCR_X_OFFSET=0, SCR_Y_OFFSET=0;
 
+/** @brief contrast power transform
+ * d = s^y
+ * pow = 2: square law, similar to exponential
+ * pwo = 1/3: cubic root,similar to logarithmic
+ */
+void power_transform(uint8_t *src, uint8_t *dst, int size, float pow, int level)
+{
+	for(int i = 0 ; i < size; i++){
+		float p = powf(src[i]/(float)level, pow);
+		if(p > 1.0f ) p = 1.0f;
+		dst[i]=p*level;
+	}
+}
+
+/** @breif log transform
+ * Stretch dark region, suppress bright region
+ * log_n(b) = log_c (b) / log_c(n) = ln(b)/ln(n)
+ * here n=2.0
+ * G = ln(1+a*F)/ln(2), 0 <= F <=1
+ */
+void log_transform(uint8_t *src, uint8_t *dst, int size, float a, int level)
+{
+	for(int i = 0 ; i < size; i++){
+		float l = logf(1.0f + a * src[i]/(float)level);
+		l /= logf(2.0f);
+		if(l > 1.0f) l= 1.0f;
+		dst[i]=l*level;
+	}
+}
+
+/** @breif inverse log transform
+ * expand bright region
+ *
+ * G = b * (e^(aF) - 1.0), 0 <= F <=1.0
+ *
+ */
+void invLog_transform(uint8_t *src, uint8_t *dst, int size, float a, int level)
+{
+	for(int i = 0 ; i < size; i++){
+		//F = src[i]/(float)level
+		float p = powf(M_E, a * src[i]/(float)level) - 1.0f;
+		if(p > 1.0f) p= 1.0f;
+		else if(p < 0.0f ) p = 0.0f;
+		dst[i]=level*p;
+	}
+}
+
 /** @brief flipping the image
  * org : input
  * flipped : output
@@ -205,7 +252,7 @@ float PSNR(uint8_t *I, uint8_t *P, int width, int height, int L)
  * dim : dim x dim mask kernel
  *
  */
-void median(uint8_t *src, uint8_t *dst, int width, int height, int dim)
+void median(uint8_t *src, uint8_t *dst, int width, int height, int dim, int method)
 {
 	//padding border
 	uint8_t window[dim*dim];
@@ -241,7 +288,7 @@ void median(uint8_t *src, uint8_t *dst, int width, int height, int dim)
  * dim : dim x dim mask kernel, dim is "odd"
  *
  */
-void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim)
+void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim, int method)
 {
 	//padding border
 	uint8_t window[dim*dim];
@@ -249,25 +296,46 @@ void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim)
 	uint8_t *pad_buf=NULL;
 	//expand source image by padding borders
 	pad_buf = boundary_ext(src, width, height, pad, "mean");
+	
+	if(method == 0){
+		for(int fx = 0; fx < dim;fx++)
+			for(int fy = 0; fy < dim; fy++){
+				window[fx + fy * dim] = 1;
+			}
 
-	for(int fx = 0; fx < dim;fx++)
-		for(int fy = 0; fy < dim; fy++){
-			window[fx + fy * dim] = 1;
-        }
-
-	for(int y = pad;  y < (height+pad); y++)
-       for(int x = pad ; x < (width+pad); x++){
-		   unsigned sum=0;
-           for(int fx = 0; fx < dim;fx++)
-               for(int fy = 0; fy < dim; fy++){
-                   sum += window[fx + fy*dim] * pad_buf[(x + fx - pad) + (y + fy - pad)*(width + 2*pad)];
-			   }
-			sum /= dim*dim;
-			//using the median element in the sorting list
-			dst[(y-pad)*width+(x-pad)] = sum;
-	   }
-
-	 free(pad_buf);
+		for(int y = pad;  y < (height+pad); y++)
+		for(int x = pad ; x < (width+pad); x++){
+			unsigned sum=0;
+			//convolution with filter
+			for(int fx = 0; fx < dim;fx++)
+				for(int fy = 0; fy < dim; fy++){
+					sum += window[fx + fy*dim] * pad_buf[(x + fx - pad) + (y + fy - pad)*(width + 2*pad)];
+				}
+				sum /= dim*dim;//normal kernel/filter to 1
+				//using the median element in the sorting list
+				dst[(y-pad)*width+(x-pad)] = sum;
+		}
+	}else {
+		for(int fx = 0; fx < dim;fx++)
+			for(int fy = 0; fy < dim; fy++){
+				window[fx + fy * dim] = 1;
+			}
+		window[dim*dim/2]=2;
+		
+		for(int y = pad;  y < (height+pad); y++)
+		for(int x = pad ; x < (width+pad); x++){
+			unsigned sum=0;
+			//convolution with filter
+			for(int fx = 0; fx < dim;fx++)
+				for(int fy = 0; fy < dim; fy++){
+					sum += window[fx + fy*dim] * pad_buf[(x + fx - pad) + (y + fy - pad)*(width + 2*pad)];
+				}
+				sum /= (dim*dim + 1);//normal kernel/filter to 1
+				//using the median element in the sorting list
+				dst[(y-pad)*width+(x-pad)] = sum;
+		}
+	}
+	free(pad_buf);
 }
 
 /** @brief flipping the image

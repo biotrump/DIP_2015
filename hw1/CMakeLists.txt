@@ -166,6 +166,16 @@ qt5_use_modules(p1 Widgets  OpenGL Test Concurrent)
 target_link_libraries(p1
 	${OpenCV_LIBS}
 )
+
+add_executable(p1e
+	dip-lib.cpp
+	helper.cpp
+	p1e.cpp
+)
+qt5_use_modules(p1e Widgets  OpenGL Test Concurrent)
+target_link_libraries(p1e
+	${OpenCV_LIBS}
+)
 # --------------------------------------------------
 # PROBLEM 2: NOISE REMOVAL
 # --------------------------------------------------

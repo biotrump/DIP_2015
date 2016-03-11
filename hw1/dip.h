@@ -9,6 +9,10 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 
+#ifndef M_E
+# define M_E		2.7182818284590452354
+#endif
+
 #define	DEFAULT_BIT_DEPTH	(8)
 #define	MAX_GREY_LEVEL	((1<<DEFAULT_BIT_DEPTH) -1)
 
@@ -18,6 +22,28 @@
 #define	HIST_WIN_WIDTH 	(256)
 #define	HIST_WIN_HEIGHT	(256)
 
+/** @brief contrast power transform
+ * d = s^y
+ * pow = 2: square law, similar to exponential
+ * pwo = 1/3: cubic root,similar to logarithmic
+ */
+void power_transform(uint8_t *src, uint8_t *dst, int size, float pow=2.0, int level=MAX_GREY_LEVEL);
+
+/** @breif log transform
+ * Stretch dark region, suppress bright region
+ * log_n(b) = log_c (b) / log_c(n) = ln(b)/ln(n)
+ * here n=2.0
+ * G = ln(1+a*F)/ln(2), 0 <= F <=1
+ */
+void log_transform(uint8_t *src, uint8_t *dst, int size, float a=1.0, int level=MAX_GREY_LEVEL);
+
+/** @breif inverse log transform
+ * expand bright region
+ *
+ * G = b * (e^(aF) - 1.0), 0 <= F <=1.0
+ *
+ */
+void invLog_transform(uint8_t *src, uint8_t *dst, int size, float a=1.0f, int level=MAX_GREY_LEVEL);
 /** @brief flipping the image
  * org : input
  * flipped : output
@@ -62,13 +88,13 @@ float PSNR(uint8_t *I, uint8_t *P, int width, int height, int L=8);
  * dim : dim x dim mask kernel
  *
  */
-void median(uint8_t *src, uint8_t *dst, int width, int height, int dim=3);
+void median(uint8_t *src, uint8_t *dst, int width, int height, int dim=3, int method=0);
 
 /** @brif media filter
  * dim : dim x dim mask kernel
  *
  */
-void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim=3);
+void mean(uint8_t *src, uint8_t *dst, int width, int height, int dim=3, int method=0);
 
 /** @brief flipping the image
  * image : 8bit grey image
