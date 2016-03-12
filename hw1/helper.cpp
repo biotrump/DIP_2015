@@ -107,5 +107,6 @@ IplImage* cvDisplay(uint8_t *buf, int width, int height, int x, int y, string wn
 	cvSetData(img, buf, width);
 	namedWindow( wname, flag );	// Create a window for display.
 	moveWindow( wname, x, y);
-	cvShowImage( wname.c_str(), img );                   // Show our image inside it.
+	cvShowImage( wname.c_str(), img );     // Show our image inside it.
+	return img;
 }
