@@ -1,5 +1,5 @@
 /** @brief DIP program to flip an image
- * ./bin/p1e -n 100 -o 0x600 -D ../../assignment/hw1/sample2.raw
+ * ./bin/p1e -n 100  -D ../../assignment/hw1/sample2.raw
  *
  * @author <Thomas Tsai, thomas@life100.cc>
  */
@@ -153,7 +153,7 @@ void PowerLawTransform(int pos, void *userdata)
 
 	//show it
 	string wname_Dlhe=wname_D + " power law transform ";
-	imgL= cvDisplay(buf_powT, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET, 
+	imgL= cvDisplay(&imgL, buf_powT, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET, 
 						wname_Dlhe, cvFlag);
 
 	//show histogram
@@ -235,7 +235,8 @@ void InvLogTransform(int pos, void *userdata)
 	bufDExp=(uint8_t *)realloc(bufDExp, WIDTH * HEIGHT);
 	invLog_transform(bufD, bufDExp, WIDTH * HEIGHT, pos/ILOGT_DIV);
 	string wname_DExp = wname_D + ": Inv log transform";
-	IplImage * imgDExp= cvDisplay(bufDExp, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+	IplImage * imgDExp= NULL;
+	cvDisplay(&imgDExp, bufDExp, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
 								SCR_Y_OFFSET+SCR_Y_OFFSET, wname_DExp, cvFlag);
 
 	//show histogram of image
@@ -304,7 +305,8 @@ int main( int argc, char** argv )
 	string wname_D, wname_Dp;
 	SplitFilename (raw_win_nameD, folder, wname_D);
 	wname_Dp = wname_D + ": D";
-	IplImage * imgD= cvDisplay(bufD, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,0+SCR_Y_OFFSET, 
+	IplImage * imgD= NULL;
+	cvDisplay(&imgD, bufD, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,0+SCR_Y_OFFSET, 
 						wname_Dp, cvFlag);
 	
 	//show histogram of image D

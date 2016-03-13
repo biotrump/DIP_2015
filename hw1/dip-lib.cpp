@@ -26,7 +26,7 @@ using namespace std;
 int SCR_X_OFFSET=0, SCR_Y_OFFSET=0;
 
 /** @brief contrast power transform
- * d = s^y
+ * d = s^y = pow(s, y)
  * pow = 2: square law, similar to exponential
  * pwo = 1/3: cubic root,similar to logarithmic
  */
@@ -138,7 +138,7 @@ uint8_t *boundary_ext(uint8_t *src, int width, int height, int pad, const string
 	return pad_buf;
 }
 
-/* M x N matrix
+/** @brief generate a M x N matrix which simulates pepper and salt, impulse noise
  * impulse noise : pepper and salt noise generator
  * black_thr : black threshold <
  * white_thr : white threshold >
@@ -175,7 +175,7 @@ void impulse_noise_add(uint8_t *imp, uint8_t *image, int M, int N)
 	}
 }
 
-/* M x N matrix
+/** @brief white noise generator: M x N matrix
  * white noise : uniform white noise generator
  * white_thr : white threshold >
  */

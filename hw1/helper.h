@@ -33,4 +33,8 @@ void cvPrintf(IplImage* img, const char *text, CvPoint TextPosition, CvFont Font
  */
 IplImage* cvDisplay(uint8_t *buf, int width, int height, int x, int y, string wname,
 	int flag=CV_WINDOW_AUTOSIZE, int depth=IPL_DEPTH_8U, int channel=1);
+
+IplImage* cvDisplay(IplImage** pimg, uint8_t *buf, int width, int height, int x, int y, 
+					string wname, 	int flag=CV_WINDOW_AUTOSIZE, int depth=IPL_DEPTH_8U, 
+					int channel=1);
 #endif

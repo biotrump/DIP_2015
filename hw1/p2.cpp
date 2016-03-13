@@ -1,7 +1,7 @@
 /** @brief DIP program to flip an image
  * @author <Thomas Tsai, thomas@life100.cc>
  *
- * ./bin/p2 -n 3 -o 0x600 -p 2a -r ../../assignment/hw1/sample1.raw
+ * ./bin/p2 -p m+M -n 3 -r ../../assignment/hw1/sample3.raw
  *
  */
 #include <stdio.h>
@@ -27,27 +27,29 @@ using namespace std;
 //MAX kernel matrix dimension
 #define	MAX_DIM		(33)
 
-const char org_display[]="Original Display";
-const char flip_v[]="vertically flipped";
-const char flip_h[]="horizontally flipped";
+#define	WIN_GAP_X	(280)
+#define	WIN_GAP_Y	(300)
 
-char raw_fileD[1024]="sample2.raw";
+string wname_tune("noise_tune");
 char raw_file[1024]="sample3.raw";
-char problem[100]="2a";
 int mask_dim=3;
 int add_noise=0;
+int method = 0 ;
+
+int median_filter=0;
+int mean_filter=0;
 
 static void usage(FILE *fp, int argc, char **argv)
 {
 	fprintf(fp,
 		 "Usage: %s [options]\n\n"
 		 "Options:\n"
-		 "-h | --help        Print this message\n"
-		 "-a | --add         Adding noise to raw image\n"
-		 "-n | --dim     n   nxn mask\n"
-		 "-o | --offset  mxn The screen offset for dual screen\n"
-		 "-p | --problem 2a  The problem 2a,2b,2c... to solve\n"
-		 "-r | --raw	     The full path of the raw file \n"
+		 "-h | --help                 Print this message\n"
+		 "-a | --add                  Adding noise to raw image\n"
+		 "-n | --dim     n            nxn kernel mask\n"
+		 "-o | --offset  mxn          The screen offset for dual screen\n"
+		 "-p | --perform [M, m, M+m]  M: median, m:mean, M+m:both\n"
+		 "-r | --raw	              The full path of the raw file \n"
 		 "",
 		 argv[0]);
 }
@@ -60,7 +62,7 @@ long_options[] = {
 	{ "help",   	no_argument,       NULL, 'h' },
 	{ "dim",		required_argument, NULL, 'n' },
 	{ "offset",		required_argument, NULL, 'o' },
-	{ "problem",	required_argument, NULL, 'p' },
+	{ "perform",	required_argument, NULL, 'p' },
 	{ "raw",		required_argument, NULL, 'r' },
 	{ 0, 0, 0, 0 }
 };
@@ -107,8 +109,15 @@ static int option(int argc, char **argv)
 			break;
 		case 'p':
 			errno = 0;
-			strncpy(problem, optarg, 100);
-			printf("%s\n", problem);
+			if(strcmp(optarg,"M") == 0)
+				median_filter=1;
+			if(strcmp(optarg,"m") == 0)
+				mean_filter=1;
+			if(strcmp(optarg,"M+m") == 0 || strcmp(optarg,"m+M") == 0){
+				median_filter=1;
+				mean_filter=1;
+			}
+			printf("%s:Median=%d, mean=%d\n", optarg, median_filter, mean_filter);
 			if (errno){
 				r=-1;
 			}
@@ -135,17 +144,7 @@ static int option(int argc, char **argv)
 	return r;
 }
 
-void p2a(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
-{
-	median(src, dst, width, height, dim);
-}
-
-void p2b(uint8_t *src, uint8_t *dst, int width, int height, int dim=3)
-{
-	mean(src, dst, width, height, dim);
-}
-
-IplImage* imgImpAdd=NULL, *imgImpFiltered=NULL, *imgP2a=NULL;
+IplImage* imgImpAdd=NULL, *imgImpFiltered=NULL, *imgMedian=NULL;
 int black_thr=3,white_thr=252;
 void show_impulse_noise(uint8_t *imp, int width, int height)
 {
@@ -153,7 +152,7 @@ void show_impulse_noise(uint8_t *imp, int width, int height)
 	cvSetData(imgImPulse, imp, width);
 	//show the raw image
 	namedWindow( "impulse noise", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("impulse noise", 300,0+SCR_Y_OFFSET);
+	moveWindow("impulse noise", WIN_GAP_X + SCR_X_OFFSET,SCR_Y_OFFSET);
 	cvShowImage( "impulse noise", imgImPulse );                   // Show our image inside it.
 }
 
@@ -170,22 +169,24 @@ void impulse_bchange(int pos, void *userdata)
 	uint8_t *bufRaw=(uint8_t *)userdata;
 	buf_addImp= (uint8_t *)realloc(buf_addImp, WIDTH * HEIGHT);
 	memcpy(buf_addImp,bufRaw, WIDTH * HEIGHT);
-	if(add_noise) impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
+	if(add_noise) {
+		impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
 
-	cvSetData(imgImpAdd, buf_addImp, WIDTH);
-	namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("impulse noise add", 600,0+SCR_Y_OFFSET);
-	cvShowImage("impulse noise add", imgImpAdd );                   // Show our image inside it.
+		cvSetData(imgImpAdd, buf_addImp, WIDTH);
+		namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+		moveWindow("impulse noise add", WIN_GAP_X*2 + SCR_X_OFFSET, SCR_Y_OFFSET);
+		cvShowImage("impulse noise add", imgImpAdd );                   // Show our image inside it.
+	}
 	
-	//Problem 2a : median filter
+	//median filter
 	buff_Iwork=(uint8_t *)realloc(buff_Iwork, WIDTH * HEIGHT);
 	//median
-	p2a(buf_addImp, buff_Iwork, WIDTH, HEIGHT, mask_dim);
+	median(buf_addImp, buff_Iwork, WIDTH, HEIGHT, mask_dim);
 	//show the median filtered image
-	cvSetData(imgP2a, buff_Iwork, WIDTH);
+	cvSetData(imgMedian, buff_Iwork, WIDTH);
 	namedWindow( "median", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("median", 1000,0+SCR_Y_OFFSET);
-	cvShowImage( "median", imgP2a );                   // Show our image inside it
+	moveWindow("median", WIN_GAP_X*3 + SCR_X_OFFSET,SCR_Y_OFFSET);
+	cvShowImage( "median", imgMedian );                   // Show our image inside it
 }
 
 void impulse_wchange(int pos, void *userdata)
@@ -199,34 +200,36 @@ void impulse_wchange(int pos, void *userdata)
 	//add impulse noise to image
 	buf_addImp= (uint8_t *)realloc(buf_addImp, WIDTH * HEIGHT);
 	memcpy(buf_addImp,bufRaw, WIDTH * HEIGHT);
-	if(add_noise)	impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
+	if(add_noise){
+		impulse_noise_add(imp_buf,buf_addImp, HEIGHT, WIDTH);
 
-	cvSetData(imgImpAdd, buf_addImp, WIDTH);
-	namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("impulse noise add", 600,0+SCR_Y_OFFSET);
-	cvShowImage("impulse noise add", imgImpAdd );                   // Show our image inside it.
+		cvSetData(imgImpAdd, buf_addImp, WIDTH);
+		namedWindow("impulse noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+		moveWindow("impulse noise add", WIN_GAP_X*2 + SCR_X_OFFSET, SCR_Y_OFFSET);
+		cvShowImage("impulse noise add", imgImpAdd );                   // Show our image inside it.
+	}
 
-	//Problem 2a : median filter
+	//median filter
 	buff_Iwork=(uint8_t *)realloc(buff_Iwork, WIDTH * HEIGHT);
-	p2a(buf_addImp, buff_Iwork, WIDTH, HEIGHT, mask_dim);
+	median(buf_addImp, buff_Iwork, WIDTH, HEIGHT, mask_dim);
 
-	cvSetData(imgP2a, buff_Iwork, WIDTH);
+	cvSetData(imgMedian, buff_Iwork, WIDTH);
 	//show the median filtered image
 	namedWindow( "median", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("median", 1000,0+SCR_Y_OFFSET);
-	cvShowImage( "median", imgP2a );                   // Show our image inside it
+	moveWindow("median", WIN_GAP_X*3 + SCR_X_OFFSET, SCR_Y_OFFSET);
+	cvShowImage( "median", imgMedian );                   // Show our image inside it
 
 }
 
 int whiten_thr=254;
-IplImage* imgWhiteAdd=NULL, *imgWhiteFiltered=NULL, *imgP2b=NULL;
+IplImage* imgWhiteAdd=NULL, *imgWhiteFiltered=NULL, *imgMean=NULL;
 void show_white_noise(uint8_t *white, int width, int height)
 {
 	IplImage* imgWhiteN = cvCreateImageHeader(cvSize(width, height), IPL_DEPTH_8U, 1);
 	cvSetData(imgWhiteN, white, width);
 	//show the white noise
 	namedWindow( "white noise", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("white noise", 300,300+SCR_Y_OFFSET);
+	moveWindow("white noise", WIN_GAP_X + SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
 	cvShowImage( "white noise", imgWhiteN );                   // Show our image inside it.
 }
 
@@ -235,7 +238,9 @@ void whiten_wchange(int pos, void *userdata)
 {
 	white_buf=(uint8_t *)realloc(white_buf, WIDTH * HEIGHT);
 	whiten_thr=pos;
+	//generate white noise
 	white_noise_gen(white_buf, HEIGHT, WIDTH, whiten_thr);
+	//show it
 	show_white_noise(white_buf, WIDTH, HEIGHT);
 
 	//add white noise to image
@@ -244,22 +249,23 @@ void whiten_wchange(int pos, void *userdata)
 	memcpy(buf_addWhite,bufRaw, WIDTH * HEIGHT);
 
 	//adding noise to image I
-	if(add_noise) white_noise_add(white_buf, buf_addWhite, HEIGHT, WIDTH);
+	if(add_noise){
+		white_noise_add(white_buf, buf_addWhite, HEIGHT, WIDTH);
 
-	cvSetData(imgWhiteAdd, buf_addWhite, WIDTH);
-	namedWindow("white noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("white noise add", 600,300+SCR_Y_OFFSET);
-	cvShowImage("white noise add", imgWhiteAdd );                   // Show our image inside it.
+		cvSetData(imgWhiteAdd, buf_addWhite, WIDTH);
+		namedWindow("white noise add", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+		moveWindow("white noise add", WIN_GAP_X*2 + SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
+		cvShowImage("white noise add", imgWhiteAdd );                   // Show our image inside it.
+	}
 
-	//Problem 2b : mean filter
 	buff_wwork=(uint8_t *)realloc(buff_wwork, WIDTH * HEIGHT);
 	//mean filter
-	p2b(buf_addWhite, buff_wwork, WIDTH, HEIGHT, mask_dim);
+	mean(buf_addWhite, buff_wwork, WIDTH, HEIGHT, mask_dim);
 	//show it
-	cvSetData(imgP2b, buff_wwork, WIDTH);
+	cvSetData(imgMean, buff_wwork, WIDTH);
 	namedWindow( "mean", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow("mean", 1000,300+SCR_Y_OFFSET);
-	cvShowImage( "mean", imgP2b );                   // Show our image inside it.
+	moveWindow("mean", WIN_GAP_X*3 + SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
+	cvShowImage( "mean", imgMean );                   // Show our image inside it.
 }
 
 IplImage *imgBar=NULL;
@@ -297,8 +303,7 @@ int main( int argc, char** argv )
 		exit(EXIT_FAILURE);
 	}
 
-	//opening file
-	printf("%s\nD:%s\n", raw_file, raw_fileD);
+	//loading raw file
 	uint8_t *bufRaw=NULL;
 	if( (fd = open(raw_file, O_RDONLY)) != -1 ){
 		bufRaw= (uint8_t *)malloc( WIDTH * HEIGHT);
@@ -317,7 +322,7 @@ int main( int argc, char** argv )
 	cvSetData(imgRaw, bufRaw, WIDTH);
 	//show the raw image
 	namedWindow( winRaw, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
-	moveWindow(winRaw, 0,0);
+	moveWindow(winRaw, SCR_X_OFFSET,SCR_Y_OFFSET);
 	cvShowImage( winRaw.c_str(), imgRaw );                   // Show our image inside it.
 
 	////////////////////////////////////////////
@@ -326,26 +331,32 @@ int main( int argc, char** argv )
 	imgImpFiltered= cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	imgWhiteAdd = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	imgWhiteFiltered = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	imgP2a = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
-	imgP2b = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgMedian = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	imgMean = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 
 	//imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
 	//show_impulse_noise(imp_buf, WIDTH, HEIGHT);
-	cv::namedWindow("noise_tune", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
+	cv::namedWindow(wname_tune, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
 	imgBar = cvCreateImage(cvSize(512, 512), IPL_DEPTH_8U, 3);
 	cvSetZero(imgBar);
-	cv::createTrackbar("kernel dimension", "noise_tune", &mask_dim, MAX_DIM, ProcessDim, 
+	if(median_filter || mean_filter)
+		cv::createTrackbar("kernel dimension", wname_tune, &mask_dim, MAX_DIM, ProcessDim, 
 						bufRaw);
-	cv::createTrackbar("imp black threshold <", "noise_tune", &black_thr, MAX_GREY_LEVEL, 
-					   impulse_bchange, bufRaw);
-	cv::createTrackbar("imp white threshold >", "noise_tune", &white_thr, MAX_GREY_LEVEL, 
-					   impulse_wchange, bufRaw);
-	//white_buf=(uint8_t *)realloc(white_buf, WIDTH * HEIGHT);
-	//show_white_noise(white_buf, WIDTH, HEIGHT);
-	cv::createTrackbar("white noise threshold >", "noise_tune", &white_thr, MAX_GREY_LEVEL, 
-					   whiten_wchange, bufRaw);
-	moveWindow("noise_tune", 1300,300+SCR_Y_OFFSET);
-	cvShowImage( "noise_tune", imgBar);
+	if(median_filter){
+		cv::createTrackbar("imp: black threshold <", wname_tune, &black_thr, 
+						   MAX_GREY_LEVEL,  impulse_bchange, bufRaw);
+	
+		cv::createTrackbar("imp: white threshold >", wname_tune, &white_thr, 
+						   MAX_GREY_LEVEL,   impulse_wchange, bufRaw);
+		impulse_wchange(white_thr, bufRaw);
+	}
+	if(mean_filter){
+		cv::createTrackbar("white noise: threshold >", wname_tune, &white_thr, 
+						   MAX_GREY_LEVEL, whiten_wchange, bufRaw);
+		whiten_wchange(white_thr, bufRaw);
+	}
+	moveWindow(wname_tune, WIN_GAP_X*4 + SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
+	cvShowImage( wname_tune.c_str(), imgBar);
 	////////////////////////////////////////////
 
 	string winP2="P", winP2D="P";
@@ -370,11 +381,11 @@ int main( int argc, char** argv )
 	free(bufRaw);
 	
 	//destroyWindow("median");
-	cvReleaseImageHeader(&imgP2a);
+	cvReleaseImageHeader(&imgMedian);
 	//free(buf_work);
 
 	//destroyWindow(winP2D);
-	cvReleaseImageHeader(&imgP2b);
+	cvReleaseImageHeader(&imgMean);
 	//free(buf_diff);
 
     return 0;

@@ -51,7 +51,7 @@ void invLog_transform(uint8_t *src, uint8_t *dst, int size, float a=1.0f, int le
  */
 int flip(uint8_t *org, uint8_t *flipped, char fv);
 
-/* M x N matrix
+/** @brief generate a M x N matrix which simulates pepper and salt, impulse noise
  * impulse noise : pepper and salt noise generator
  * black_thr : black threshold <
  * white_thr : white threshold >
@@ -59,7 +59,7 @@ int flip(uint8_t *org, uint8_t *flipped, char fv);
 void impulse_noise_gen(uint8_t *imp, int M, int N, uint8_t black_thr, uint8_t white_thr);
 void impulse_noise_add(uint8_t *imp, uint8_t *image, int M, int N);
 
-/* M x N matrix
+/** @brief white noise generator: M x N matrix
  * white noise : uniform white noise generator
  * white_thr : white threshold >
  */

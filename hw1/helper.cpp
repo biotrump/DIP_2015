@@ -23,6 +23,15 @@ using namespace std;
 
 #include "dip.h"
 
+/*
+// IplImage to Mat
+IplImage *img;
+cv::Mat mat(img, 0);
+// Mat to IplImage
+cv::Mat mat;
+IplImage *img = IplImage(mat);
+*/
+
 //http://stackoverflow.com/questions/3071665/getting-a-directory-name-from-a-filename
 void SplitFilename (const string& str, string &folder, string &file)
 {
@@ -108,5 +117,22 @@ IplImage* cvDisplay(uint8_t *buf, int width, int height, int x, int y, string wn
 	namedWindow( wname, flag );	// Create a window for display.
 	moveWindow( wname, x, y);
 	cvShowImage( wname.c_str(), img );     // Show our image inside it.
+	return img;
+}
+
+IplImage* cvDisplay(IplImage** pimg, uint8_t *buf, int width, int height, int x, int y, string wname,
+	int flag, int depth, int channel)
+{
+	printf(">>%s:pimg=%p, *pimg=%p\n", __func__, pimg, *pimg);
+	if( (pimg != NULL) && (*pimg != NULL) )
+		cvReleaseImageHeader(pimg);
+
+	//show image H, the histogram equlization of image D
+	IplImage* img = cvCreateImageHeader(cvSize(width, height), depth, channel);
+	cvSetData(img, buf, width);
+	namedWindow( wname, flag );	// Create a window for display.
+	moveWindow( wname, x, y);
+	cvShowImage( wname.c_str(), img );     // Show our image inside it.
+	printf("<<%s:img=%p\n", __func__, img);
 	return img;
 }

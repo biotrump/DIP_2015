@@ -1,5 +1,5 @@
 /** @brief DIP program to flip an image
- * ./bin/bonus -o 0x700 -p 2a -n 3 -r ../../assignment/hw1/BONUS_01/bonus.raw
+ * ./bin/bonus -n 3 -r ../../assignment/hw1/BONUS_01/bonus.raw
  * 
  * @author <Thomas Tsai, thomas@life100.cc>
  *
@@ -129,6 +129,10 @@ static int option(int argc, char **argv)
 	return r;
 }
 
+IplImage *imgMedian = NULL;
+IplImage *imgMDHE=NULL;
+IplImage *imgMean=NULL;
+IplImage *imgHE = NULL;
 void ProcessDim(int pos, void *userdata)
 {
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
@@ -163,8 +167,23 @@ void ProcessDim(int pos, void *userdata)
 		//1. perform median filter by mask_dim x mask_dim
 		median(bufRaw, buf_worka, WIDTH, HEIGHT, mask_dim);
 		
+		//write output
+		int fd=-1;
+		char  out_file[100];
+		sprintf(out_file, "bonus_median_%dx%d.raw",pos,pos );
+		//create output file
+		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+			int s=write(fd, buf_worka, WIDTH * HEIGHT);
+			cout << "write:" << s << endl;
+			close(fd);
+		}else{
+			cout << out_file << " open failed!"  << endl;
+		}
+	
 		string wname_median = "bonus : median";
-		IplImage *imgMedian = cvDisplay(buf_worka, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+		
+		printf("imgMedian=%p, &imgMedian=%p\n",imgMedian,&imgMedian);
+		imgMedian = cvDisplay(&imgMedian, buf_worka, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
 									WIN_GAP_Y+SCR_Y_OFFSET, wname_median, cvFlag);
 
 		//show histogram of image
@@ -181,9 +200,7 @@ void ProcessDim(int pos, void *userdata)
 		hist_eq(buf_worka, buf_mdhe,  WIDTH * HEIGHT, hist_tableMD, cdf_table,
 				(MAX_GREY_LEVEL+1),	histeq_mapMD);
 
-		int fd=-1;
-		char out_file[100];
-		sprintf(out_file,"bonus_%dx%d.raw",mask_dim,mask_dim);
+		sprintf(out_file,"bonus_median_he_%dx%d.raw",mask_dim,mask_dim);
 		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
 			int s=write(fd, buf_mdhe, WIDTH * HEIGHT);
 			cout << "write:" << s << endl;
@@ -199,7 +216,8 @@ void ProcessDim(int pos, void *userdata)
 
 		//show histogram equlization of the mean image
 		string wnameMDHE("median : Hist eq");
-		IplImage *imgMDHE = cvDisplay(buf_mdhe, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+		
+		imgMDHE = cvDisplay(&imgMDHE, buf_mdhe, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
 								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameMDHE, cvFlag);
 
 		//PSNR
@@ -213,10 +231,21 @@ void ProcessDim(int pos, void *userdata)
 	{
 		//perform mean filter by mask_dim x mask_dim
 		mean(bufRaw, buf_workb, WIDTH, HEIGHT, mask_dim);
-
+		//write output
+		int fd=-1;
+		char  out_file[100];
+		sprintf(out_file, "bonus_mean_%dx%d.raw",pos,pos );
+		//create output file
+		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+			int s=write(fd, buf_workb, WIDTH * HEIGHT);
+			cout << "write:" << s << endl;
+			close(fd);
+		}else{
+			cout << out_file << " open failed!"  << endl;
+		}
 		//show image after mean filter
 		string wname_mean = "bonus : mean";
-		IplImage *imgMean = cvDisplay(buf_workb, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+		imgMean = cvDisplay(&imgMean, buf_workb, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
 									WIN_GAP_Y+SCR_Y_OFFSET, wname_mean, cvFlag);
 
 		//show histogram of image
@@ -240,7 +269,7 @@ void ProcessDim(int pos, void *userdata)
 
 		//show histogram equlization of the mean image
 		string wnameHE("bonus mean : Hist eq");
-		IplImage *imgHE = cvDisplay(buf_he, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+		imgHE = cvDisplay(&imgHE, buf_he, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
 								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameHE, cvFlag);
 
 		//PSNR
