@@ -144,8 +144,25 @@ static int option(int argc, char **argv)
 	return r;
 }
 
+
+IplImage *imgBar=NULL;
 IplImage* imgImpAdd=NULL, *imgImpFiltered=NULL, *imgMedian=NULL;
 int black_thr=3,white_thr=252;
+char psnr_mean_str[100], psnr_median_str[100];
+
+void display_PSNR(char *median_str, char *mean_str)
+{
+	if(median_str)
+		strcpy(psnr_median_str, median_str);
+	if(mean_str)
+		strcpy(psnr_mean_str, mean_str);
+	cvSetZero(imgBar);
+	
+	cvPrintf(imgBar, psnr_median_str, cvPoint(1, 40));
+	cvPrintf(imgBar, psnr_mean_str, cvPoint(1, 80));
+	cvShowImage( wname_tune.c_str(), imgBar);	
+}
+
 void show_impulse_noise(uint8_t *imp, int width, int height)
 {
 	IplImage* imgImPulse = cvCreateImageHeader(cvSize(width, height), IPL_DEPTH_8U, 1);
@@ -159,7 +176,6 @@ void show_impulse_noise(uint8_t *imp, int width, int height)
 uint8_t *imp_buf=NULL, *buf_addImp=NULL, *buff_Iwork=NULL;
 void impulse_bchange(int pos, void *userdata)
 {
-	uint8_t *src=(uint8_t *)userdata;
 	black_thr=pos;
 
 	imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
@@ -187,11 +203,16 @@ void impulse_bchange(int pos, void *userdata)
 	namedWindow( "median", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
 	moveWindow("median", WIN_GAP_X*3 + SCR_X_OFFSET,SCR_Y_OFFSET);
 	cvShowImage( "median", imgMedian );                   // Show our image inside it
+	
+	//PSNR
+	char psnr_str[100];
+	float psnr = PSNR(bufRaw, buff_Iwork, WIDTH, HEIGHT);
+	sprintf(psnr_str, "R1: PSNR of median=%f", psnr);
+	display_PSNR(psnr_str, NULL);
 }
 
 void impulse_wchange(int pos, void *userdata)
 {
-	uint8_t *src=(uint8_t *)userdata;
 	white_thr=pos;
 	imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
 	impulse_noise_gen(imp_buf, HEIGHT, WIDTH, black_thr, white_thr);
@@ -219,6 +240,11 @@ void impulse_wchange(int pos, void *userdata)
 	moveWindow("median", WIN_GAP_X*3 + SCR_X_OFFSET, SCR_Y_OFFSET);
 	cvShowImage( "median", imgMedian );                   // Show our image inside it
 
+	//PSNR
+	char psnr_str[100];
+	float psnr = PSNR(bufRaw, buff_Iwork, WIDTH, HEIGHT);
+	sprintf(psnr_str, "PSNR of median=%f", psnr);
+	display_PSNR(psnr_str, NULL);
 }
 
 int whiten_thr=254;
@@ -266,9 +292,14 @@ void whiten_wchange(int pos, void *userdata)
 	namedWindow( "mean", WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
 	moveWindow("mean", WIN_GAP_X*3 + SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
 	cvShowImage( "mean", imgMean );                   // Show our image inside it.
+	
+	//PSNR
+	char psnr_str[100];
+	float psnr = PSNR(bufRaw, buff_wwork, WIDTH, HEIGHT);
+	sprintf(psnr_str, "PSNR of mean=%f", psnr);
+	display_PSNR(NULL, psnr_str);
 }
 
-IplImage *imgBar=NULL;
 void ProcessDim(int pos, void *userdata)
 {
 	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
@@ -288,6 +319,7 @@ void ProcessDim(int pos, void *userdata)
 int main( int argc, char** argv )
 {
     int fd=-1;
+	int cvFlag=WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED;
 
 	if(argc==1){
 		usage(stderr, argc, argv);
@@ -321,7 +353,7 @@ int main( int argc, char** argv )
 	IplImage* imgRaw = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	cvSetData(imgRaw, bufRaw, WIDTH);
 	//show the raw image
-	namedWindow( winRaw, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED );	// Create a window for display.
+	namedWindow( winRaw, cvFlag);	// Create a window for display.
 	moveWindow(winRaw, SCR_X_OFFSET,SCR_Y_OFFSET);
 	cvShowImage( winRaw.c_str(), imgRaw );                   // Show our image inside it.
 
@@ -334,10 +366,8 @@ int main( int argc, char** argv )
 	imgMedian = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 	imgMean = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
 
-	//imp_buf=(uint8_t *)realloc(imp_buf, WIDTH * HEIGHT);
-	//show_impulse_noise(imp_buf, WIDTH, HEIGHT);
-	cv::namedWindow(wname_tune, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
-	imgBar = cvCreateImage(cvSize(512, 512), IPL_DEPTH_8U, 3);
+	cv::namedWindow(wname_tune, CV_WINDOW_AUTOSIZE);
+	imgBar = cvCreateImage(cvSize(512, 200), IPL_DEPTH_8U, 3);
 	cvSetZero(imgBar);
 	if(median_filter || mean_filter)
 		cv::createTrackbar("kernel dimension", wname_tune, &mask_dim, MAX_DIM, ProcessDim, 
@@ -359,8 +389,6 @@ int main( int argc, char** argv )
 	cvShowImage( wname_tune.c_str(), imgBar);
 	////////////////////////////////////////////
 
-	string winP2="P", winP2D="P";
-	
 /*
 
 	//create output file H

@@ -149,7 +149,7 @@ void impulse_noise_gen(uint8_t *imp, int M, int N, uint8_t black_thr, uint8_t wh
 	int b=0,w=0;
 	srand(time(NULL));
 	memset(imp, 127, M*N);
-	printf("%s:black_thr=%u, white_thr=%u\n", __func__, black_thr,white_thr);
+	printf("%s:black_thr=%u, white_thr=%u\n", __func__, black_thr, white_thr);
 	for(int i = 0; i < M*N; i++) {
 		int r =  rand()%256;//0-255
 		//printf("r=%d\n",r);
