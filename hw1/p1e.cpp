@@ -1,5 +1,5 @@
-/** @brief DIP program to flip an image
- * ./bin/p1e -n 100  -D ../../assignment/hw1/sample2.raw
+/** @brief PROBLEM 1: IMAGE ENHANCEMENT (e)
+ * ./bin/p1e -n 100  -D /path/to/sample2.raw
  *
  * @author <Thomas Tsai, thomas@life100.cc>
  */
@@ -34,7 +34,7 @@ using namespace std;
 
 char raw_win_nameD[1024]="sample2.raw";
 char raw_fileI[1024]="sample1.raw";
-int mask_dim=3;
+int cur_step=3;
 
 static void usage(FILE *fp, int argc, char **argv)
 {
@@ -44,7 +44,7 @@ static void usage(FILE *fp, int argc, char **argv)
 		 "-h | --help        Print this message\n"
 		 "-D | --rawD        The full path of the raw file D \n"
 		 "-I | --rawI        The full path of the raw file I \n"
-		 "-n | --pow     n   power step [0-%d] mask\n"
+		 "-n | --pow     n   start step [0-%d] of scrolling bar\n"
 		 "-o | --offset  mxn The screen offset for dual screen\n"
 		 "",
 		 argv[0], POWER_MAX);
@@ -101,8 +101,8 @@ static int option(int argc, char **argv)
 			break;
 		case 'n':
 			errno = 0;
-			mask_dim = atoi(optarg);
-			printf("mask_dim=%d\n", mask_dim);
+			cur_step = atoi(optarg);
+			printf("cur_step=%d\n", cur_step);
 			if (errno){
 				r=-1;
 			}
@@ -142,10 +142,10 @@ void PowerLawTransform(int pos, void *userdata)
 	uint8_t *bufD = (uint8_t *)userdata;
 	string wname_D("D:");
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
-	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	printf(">>%s:pos=%d, cur_step=%d\n", __func__, pos, cur_step);
 
-	mask_dim = pos;
-	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	cur_step = pos;
+	printf("<<%s:pos=%d, cur_step=%d\n", __func__, pos, cur_step);
 
 	//1. performing power law transform
 	buf_powT= (uint8_t *)realloc( buf_powT, WIDTH * HEIGHT);
@@ -185,10 +185,10 @@ void LogTransform(int pos, void *userdata)
 	uint8_t *bufD = (uint8_t *)userdata;
 	string wname_D("D:");
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
-	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	printf(">>%s:pos=%d, cur_step=%d\n", __func__, pos, cur_step);
 
-	mask_dim = pos;
-	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	cur_step = pos;
+	printf("<<%s:pos=%d, cur_step=%d\n", __func__, pos, cur_step);
 
 	//2. perform log transform
 	bufDL=(uint8_t *)realloc(bufDL, WIDTH * HEIGHT);
@@ -229,7 +229,7 @@ void InvLogTransform(int pos, void *userdata)
 	uint8_t *bufD = (uint8_t *)userdata;
 	string wname_D("D:");
 	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
-	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	printf(">>%s:pos=%d, cur_step=%d\n", __func__, pos, cur_step);
 
 	//3. perform inverse/exponential log transform
 	bufDExp=(uint8_t *)realloc(bufDExp, WIDTH * HEIGHT);
@@ -329,16 +329,16 @@ int main( int argc, char** argv )
 	// performing power law transform
 	string wname_contrastT("Contrast transform");
 	cv::namedWindow(wname_contrastT, WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
-	cv::createTrackbar("power law step/100", wname_contrastT, &mask_dim, POWER_MAX, PowerLawTransform, 
+	cv::createTrackbar("power law step/100", wname_contrastT, &cur_step, POWER_MAX, PowerLawTransform, 
 						bufD);
-	cv::createTrackbar("log tranform step/50", wname_contrastT, &mask_dim, LOGT_MAX, LogTransform, 
+	cv::createTrackbar("log tranform step/50", wname_contrastT, &cur_step, LOGT_MAX, LogTransform, 
 						bufD);
-	cv::createTrackbar("Inv log tranform step/50", wname_contrastT, &mask_dim, ILOGT_MAX, InvLogTransform, 
+	cv::createTrackbar("Inv log tranform step/50", wname_contrastT, &cur_step, ILOGT_MAX, InvLogTransform, 
 						bufD);
 	moveWindow(wname_contrastT, WIN_GAP_X*3+SCR_X_OFFSET,WIN_GAP_Y+SCR_Y_OFFSET);
-	PowerLawTransform(mask_dim, bufD);//init before use interactive
-	LogTransform(mask_dim, bufD);//init before use interactive
-	InvLogTransform(mask_dim, bufD);//init before use interactive
+	PowerLawTransform(cur_step, bufD);//init before use interactive
+	LogTransform(cur_step, bufD);//init before use interactive
+	InvLogTransform(cur_step, bufD);//init before use interactive
 	////////////////////////////////////////////
 	
 	cout << "press any key to quit..." << endl;

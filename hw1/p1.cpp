@@ -1,5 +1,7 @@
-/** @brief DIP program to flip an image
- * ./bin/p1 -n 17 -I ../../assignment/hw1/sample1.raw -D ../../assignment/hw1/sample2.raw 
+/** @brief PROBLEM 1: IMAGE ENHANCEMENT (a)-(d)
+ *
+ * (a), (b), (c), (d)
+ * %./build/bin/p1 -o 0x600 -n 17 -I /path/to/sample1.raw -D /path/to/sample2.raw
  *
  * @author <Thomas Tsai, thomas@life100.cc>
  */
@@ -28,7 +30,7 @@ using namespace std;
 #define	WIN_GAP_Y	(300)
 
 char raw_win_nameD[1024]="sample2.raw";
-char raw_fileI[1024]="sample1.raw";
+char raw_fileI[1024];
 int mask_dim=3;
 int local_histeq_only=0;
 
@@ -155,7 +157,7 @@ void ProcessDim(int pos, void *userdata)
 	buf_lhe= (uint8_t *)realloc( buf_lhe, WIDTH * HEIGHT);
 	string wname_Dlhe=wname_D + " lhe ";
 	local_hist_eq(bufD, buf_lhe,  WIDTH, HEIGHT,
-			MAX_GREY_LEVEL,	mask_dim, wname_Dlhe);
+			MAX_GREY_LEVEL,	mask_dim);
 
 	//show image L, the local histogram equalization of image D
 	wname_L =  wname_D + " L: local Hist eq";
@@ -221,18 +223,7 @@ int main( int argc, char** argv )
 	}
 
 	//loading file I and file D
-	printf("I:%s\nD:%s\n", raw_fileI, raw_win_nameD);
-	uint8_t *bufI=NULL, *bufD=NULL, *bufH=NULL, *bufL=NULL;
-	if( (fd = open(raw_fileI, O_RDONLY)) != -1 ){
-		bufI= (uint8_t *)malloc( WIDTH * HEIGHT);
-		ssize_t s=read(fd, bufI, WIDTH * HEIGHT);
-		close(fd);
-		cout << "request size = " << WIDTH * HEIGHT << ", read size=" << s << endl;
-	}else{
-		cout << raw_fileI << " opening failure!:"<< errno << endl;
-		exit(EXIT_FAILURE);
-	}
-	
+	uint8_t *bufD=NULL, *bufH=NULL, *bufL=NULL;
 	if( (fd = open(raw_win_nameD, O_RDONLY)) != -1 ){
 		bufD= (uint8_t *)malloc( WIDTH * HEIGHT);
 		ssize_t s=read(fd, bufD, WIDTH * HEIGHT);
@@ -243,45 +234,62 @@ int main( int argc, char** argv )
 		exit(EXIT_FAILURE);
 	}
 
+
 	//show raw file I
-	string folder, fileI;
-	string wname_I, wname_Ip;
-	SplitFilename (raw_fileI, folder, wname_I);
-	wname_Ip = wname_I + ": I";
+	string folder;
+	string fileI;
 	IplImage * imgI= NULL;
-	if(!local_histeq_only)
-		cvDisplay(&imgI, bufI, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,0+SCR_Y_OFFSET, 
-						wname_Ip, cvFlag);
-
-	//show histogram of image I
-	unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
-	uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
-	hist(hist_tableI, (MAX_GREY_LEVEL+1), bufI, WIDTH, HEIGHT);
-	string wname_Ihist = wname_I + " I: hist ";
-	if(!local_histeq_only)
-		draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), wname_Ihist, WIN_GAP_X*4, 
-				  0+SCR_Y_OFFSET, cvFlag);
-
-	//histogram equlization of Image I
-	uint8_t *bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
-	unsigned cdf_table[(MAX_GREY_LEVEL+1)];
-	hist_eq(bufI, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_table,
-			(MAX_GREY_LEVEL+1),	histeq_mapI);
-
-	//show cdf of image I
-	string wname_Icdf = wname_I + " I: cdf ";
-	if(!local_histeq_only)
-		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_Icdf,WIN_GAP_X*5+SCR_X_OFFSET, 
-				  0+SCR_Y_OFFSET,cvFlag, Scalar( 0, 0 , 255)	);
-	
-	//show the image II, the histogram equlization of Image I
-	string wname_II;
-	wname_II = wname_I + " II: hist eq";
 	IplImage * imgII= NULL;
-	if(!local_histeq_only)
-		cvDisplay(&imgII, bufII, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
-				  WIN_GAP_Y+SCR_Y_OFFSET, wname_II, cvFlag);
+	uint8_t *bufI=NULL;
+	uint8_t *bufII=NULL;
+	string wname_I, wname_Ip;
+	string wname_II;
+	if(strlen(raw_fileI)){
+		if( (fd = open(raw_fileI, O_RDONLY)) != -1 ){
+			bufI= (uint8_t *)malloc( WIDTH * HEIGHT);
+			ssize_t s=read(fd, bufI, WIDTH * HEIGHT);
+			close(fd);
+			cout << "request size = " << WIDTH * HEIGHT << ", read size=" << s << endl;
+		}else{
+			cout << raw_fileI << " opening failure!:"<< errno << endl;
+			exit(EXIT_FAILURE);
+		}
 
+		SplitFilename (raw_fileI, folder, wname_I);
+		wname_Ip = wname_I + ": I";
+		
+		if(!local_histeq_only)
+			cvDisplay(&imgI, bufI, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,0+SCR_Y_OFFSET, 
+							wname_Ip, cvFlag);
+
+		//show histogram of image I
+		unsigned hist_tableI[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapI[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableI, (MAX_GREY_LEVEL+1), bufI, WIDTH, HEIGHT);
+		string wname_Ihist = wname_I + " I: hist ";
+		if(!local_histeq_only)
+			draw_hist(hist_tableI, (MAX_GREY_LEVEL+1), wname_Ihist, WIN_GAP_X*4, 
+					0+SCR_Y_OFFSET, cvFlag);
+
+		//histogram equlization of Image I
+		bufII= (uint8_t *)malloc( WIDTH * HEIGHT);
+		unsigned cdf_tableI[(MAX_GREY_LEVEL+1)];
+		hist_eq(bufI, bufII,  WIDTH * HEIGHT, hist_tableI, cdf_tableI,
+				(MAX_GREY_LEVEL+1),	histeq_mapI);
+
+		//show cdf of image I
+		string wname_Icdf = wname_I + " I: cdf ";
+		if(!local_histeq_only)
+			draw_hist(cdf_tableI, (MAX_GREY_LEVEL+1), wname_Icdf,WIN_GAP_X*5+SCR_X_OFFSET, 
+					0+SCR_Y_OFFSET,cvFlag, Scalar( 0, 0 , 255)	);
+		
+		//show the image II, the histogram equlization of Image I
+		wname_II = wname_I + " II: hist eq";
+		imgII= NULL;
+		if(!local_histeq_only)
+			cvDisplay(&imgII, bufII, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+					WIN_GAP_Y+SCR_Y_OFFSET, wname_II, cvFlag);
+	}
 	//show raw image D
 	string wname_D, wname_Dp;
 	SplitFilename (raw_win_nameD, folder, wname_D);
@@ -303,8 +311,9 @@ int main( int argc, char** argv )
 				  0+SCR_Y_OFFSET,cvFlag);
 
 	//histogram equlization of image D
+	unsigned cdf_tableD[(MAX_GREY_LEVEL+1)];
 	bufH= (uint8_t *)malloc( WIDTH * HEIGHT);
-	hist_eq(bufD, bufH,  WIDTH * HEIGHT, hist_tableD, cdf_table,
+	hist_eq(bufD, bufH,  WIDTH * HEIGHT, hist_tableD, cdf_tableD,
 			(MAX_GREY_LEVEL+1),	histeq_mapH);
 
 	//create output file H
@@ -319,7 +328,7 @@ int main( int argc, char** argv )
 	//show cdf of image D
 	string wname_Dcdf = wname_D + " D: cdf ";
 	if(!local_histeq_only)
-		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_Dcdf, 0+SCR_X_OFFSET ,
+		draw_hist(cdf_tableD, (MAX_GREY_LEVEL+1), wname_Dcdf, 0+SCR_X_OFFSET ,
 				  0+SCR_Y_OFFSET, cvFlag, Scalar( 0, 0 , 255) );
 
 	//show image H, the histogram equlization of image D
@@ -374,21 +383,23 @@ int main( int argc, char** argv )
 	cvReleaseImageHeader(&imgI);
 	free(bufI);
 
+	if(strlen(raw_fileI)){
+		if(imgI){
+			destroyWindow(wname_Ip);
+			cvReleaseImageHeader(&imgI);
+			free(bufD);
+		}
+		if(imgII){
+			destroyWindow(wname_II);
+			cvReleaseImageHeader(&imgII);
+			free(bufII);		
+		}
+	}
+
 	if(imgD){
 		destroyWindow(wname_Dp);
 		cvReleaseImageHeader(&imgD);
 		free(bufD);
-	}
-	
-	if(imgI){
-		destroyWindow(wname_Ip);
-		cvReleaseImageHeader(&imgI);
-		free(bufD);
-	}
-	if(imgII){
-		destroyWindow(wname_II);
-		cvReleaseImageHeader(&imgII);
-		free(bufII);		
 	}
 
 	destroyWindow(wname_H);

@@ -419,7 +419,7 @@ void hist_cdf(unsigned *hist_table, unsigned *cdf_table, int h_size,
  * name : The name of window to show
  */
 void local_hist_eq(uint8_t *src, uint8_t *dst, int width, int height,
-				    int max_grey_level, int lM , string &name)
+				    int max_grey_level, int lM )
 {
 	unsigned pixels=lM*lM;
 	unsigned cdf=0;

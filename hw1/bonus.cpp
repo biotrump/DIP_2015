@@ -1,5 +1,5 @@
-/** @brief DIP program to flip an image
- * ./bin/bonus -n 3 -r ../../assignment/hw1/BONUS_01/bonus.raw
+/** @brief BONUS #1
+ * ./build/bin/bonus -l 200 -n 3 -r /path/to/BONUS_0bonus.raw
  * 
  * @author <Thomas Tsai, thomas@life100.cc>
  *
@@ -25,14 +25,16 @@ using namespace std;
 #include "dip.h"
 #include "helper.h"
 //MAX kernel matrix dimension
-#define	MAX_DIM		(33)
-#define	WIN_GAP_X	(280)
-#define	WIN_GAP_Y	(300)
+#define	MAX_DIM			(33)
+#define	MAX_LHE_DIM		(255)	//min(WIDTH,HEIGHT)
+#define	WIN_GAP_X		(280)
+#define	WIN_GAP_Y		(300)
 
 char raw_file[1024];
 char problem[100]="2a";
-int mask_dim=3;
-const string track_bar_name("kernel dim x dim");
+int kernel_dim=3;
+int lhe_dim=50;	//dimension of local histogram equalization
+const string track_bar_name("dimension");
 IplImage* imgBar=NULL;
 
 static void usage(FILE *fp, int argc, char **argv)
@@ -41,19 +43,20 @@ static void usage(FILE *fp, int argc, char **argv)
 		 "Usage: %s [options]\n\n"
 		 "Options:\n"
 		 "-h | --help        Print this message\n"
-		 "-n | --dim n       nxn mask\n"
-		 "-p | --problem 2x  The problem 2a,2b,2c... to solve\n"
+		 "-n | --dim n       nxn kernel dim\n"
+		 "-l | --local n     local histogram equalization dimxdim\n"
 		 "-r | --raw	     The full path of the raw file \n"
 		 "-o | --offset	 mxn The screen offset for dual screen\n"
 		 "",
 		 argv[0]);
 }
 
-static const char short_options[] = "hn:o:p:r:";
+static const char short_options[] = "hl:n:o:p:r:";
 
 static const struct option
 long_options[] = {
 	{ "help",   	no_argument,       NULL, 'h' },
+	{ "local",		required_argument, NULL, 'l' },
 	{ "dim",		required_argument, NULL, 'n' },
 	{ "offset",		required_argument, NULL, 'o' },
 	{ "problem",	required_argument, NULL, 'p' },
@@ -81,8 +84,16 @@ static int option(int argc, char **argv)
 			break;
 		case 'n':
 			errno = 0;
-			mask_dim = atoi(optarg);
-			printf("mask_dim=%d\n", mask_dim);
+			kernel_dim = atoi(optarg);
+			printf("kernel_dim=%d\n", kernel_dim);
+			if (errno){
+				r=-1;
+			}
+			break;
+	case 'l':
+			errno = 0;
+			lhe_dim = atoi(optarg);
+			printf("lhe_dim=%d\n", lhe_dim);
 			if (errno){
 				r=-1;
 			}
@@ -135,22 +146,22 @@ IplImage *imgMean=NULL;
 IplImage *imgHE = NULL;
 void ProcessDim(int pos, void *userdata)
 {
-	int cvFlag=CV_WINDOW_AUTOSIZE/*WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED*/;
+	int cvFlag=/*CV_WINDOW_AUTOSIZE*/WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED;
 	
 	uint8_t *bufRaw = (uint8_t *)userdata;
 
-	printf(">>%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	printf(">>%s:pos=%d, kernel_dim=%d\n", __func__, pos, kernel_dim);
 	if(pos < 3 ) {
 		pos=3;
 	}
 	if((pos%2)==0) {
 		pos--;//only odd dim is allowed!
 	}
-	mask_dim = pos;
-	printf("<<%s:pos=%d, mask_dim=%d\n", __func__, pos, mask_dim);
+	kernel_dim = pos;
+	printf("<<%s:pos=%d, kernel_dim=%d\n", __func__, pos, kernel_dim);
 
 	char dim_str[100];
-	sprintf(dim_str, "dim:%d x %d", mask_dim, mask_dim);
+	sprintf(dim_str, "dim:%d x %d", kernel_dim, kernel_dim);
 	cvSetZero(imgBar);
 	cvPrintf(imgBar, dim_str, cvPoint(1, 30),
 								cvFont(1.0, 1.0), CV_RGB(255,255,255));
@@ -164,8 +175,8 @@ void ProcessDim(int pos, void *userdata)
 	buf_workb= (uint8_t *)malloc( WIDTH * HEIGHT);
 
 	{
-		//1. perform median filter by mask_dim x mask_dim
-		median(bufRaw, buf_worka, WIDTH, HEIGHT, mask_dim);
+		//1. perform median filter by kernel_dim x kernel_dim
+		median(bufRaw, buf_worka, WIDTH, HEIGHT, kernel_dim);
 		
 		//write output
 		int fd=-1;
@@ -200,7 +211,7 @@ void ProcessDim(int pos, void *userdata)
 		hist_eq(buf_worka, buf_mdhe,  WIDTH * HEIGHT, hist_tableMD, cdf_table,
 				(MAX_GREY_LEVEL+1),	histeq_mapMD);
 
-		sprintf(out_file,"bonus_median_he_%dx%d.raw",mask_dim,mask_dim);
+		sprintf(out_file,"bonus_median_he_%dx%d.raw",kernel_dim,kernel_dim);
 		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
 			int s=write(fd, buf_mdhe, WIDTH * HEIGHT);
 			cout << "write:" << s << endl;
@@ -208,7 +219,7 @@ void ProcessDim(int pos, void *userdata)
 		}else{
 			cout << out_file << " open failed!"  << endl;
 		}
-		
+
 		//show cdf of image
 		string wname_mdCDF("bonus median : cdf");
 		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_mdCDF, WIN_GAP_X*5+SCR_X_OFFSET,
@@ -216,7 +227,6 @@ void ProcessDim(int pos, void *userdata)
 
 		//show histogram equlization of the mean image
 		string wnameMDHE("median : Hist eq");
-		
 		imgMDHE = cvDisplay(&imgMDHE, buf_mdhe, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
 								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameMDHE, cvFlag);
 
@@ -229,8 +239,8 @@ void ProcessDim(int pos, void *userdata)
 	}
 	
 	{
-		//perform mean filter by mask_dim x mask_dim
-		mean(bufRaw, buf_workb, WIDTH, HEIGHT, mask_dim);
+		//perform mean filter by kernel_dim x kernel_dim
+		mean(bufRaw, buf_workb, WIDTH, HEIGHT, kernel_dim);
 		//write output
 		int fd=-1;
 		char  out_file[100];
@@ -281,6 +291,161 @@ void ProcessDim(int pos, void *userdata)
 	}
 }
 
+void ProcessLHE(int pos, void *userdata)
+{
+	int cvFlag=/*CV_WINDOW_AUTOSIZE*/WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED;
+	
+	uint8_t *bufRaw = (uint8_t *)userdata;
+
+	printf(">>%s:pos=%d, kernel_dim=%d\n", __func__, pos, kernel_dim);
+	if(pos < 3 ) {
+		pos=3;
+	}
+	if((pos%2)==0) {
+		pos--;//only odd dim is allowed!
+	}
+	lhe_dim = pos;
+	printf("<<%s:pos=%d, lhe_dim=%d, kernel_dim=%d\n", __func__, pos, lhe_dim, kernel_dim);
+
+	char dim_str[100];
+	sprintf(dim_str, "dim:%d x %d", kernel_dim, kernel_dim);
+	cvSetZero(imgBar);
+	cvPrintf(imgBar, dim_str, cvPoint(1, 30),
+								cvFont(1.0, 1.0), CV_RGB(255,255,255));
+	cvShowImage( track_bar_name.c_str(), imgBar);
+		
+	IplImage* imgP2a = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	//IplImage* imgP2b = cvCreateImageHeader(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 1);
+	//string winP2="P";
+	uint8_t *buf_worka=NULL, *buf_workb=NULL;
+	buf_worka= (uint8_t *)malloc( WIDTH * HEIGHT);
+	buf_workb= (uint8_t *)malloc( WIDTH * HEIGHT);
+
+	{
+		//1. perform median filter by kernel_dim x kernel_dim
+		median(bufRaw, buf_worka, WIDTH, HEIGHT, kernel_dim);
+		
+		//write output
+		int fd=-1;
+		char  out_file[100];
+		sprintf(out_file, "bonus_median_%dx%d.raw",pos,pos );
+		//create output file
+		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+			int s=write(fd, buf_worka, WIDTH * HEIGHT);
+			cout << "write:" << s << endl;
+			close(fd);
+		}else{
+			cout << out_file << " open failed!"  << endl;
+		}
+	
+		string wname_median = "bonus : median";
+		
+		printf("imgMedian=%p, &imgMedian=%p\n",imgMedian,&imgMedian);
+		imgMedian = cvDisplay(&imgMedian, buf_worka, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+									WIN_GAP_Y+SCR_Y_OFFSET, wname_median, cvFlag);
+
+		//show histogram of image
+		unsigned hist_tableMD[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapMD[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableMD, (MAX_GREY_LEVEL+1), buf_worka, WIDTH, HEIGHT);
+		string wname_mdHist("bonus median : hist");
+		draw_hist(hist_tableMD, (MAX_GREY_LEVEL+1), wname_mdHist, 
+				WIN_GAP_X*4+SCR_X_OFFSET, WIN_GAP_Y+SCR_Y_OFFSET, cvFlag);
+
+		//2. perform local histogram equlization of Image
+		uint8_t *buf_mdhe= (uint8_t *)malloc( WIDTH * HEIGHT);
+		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
+		//hist_eq(buf_worka, buf_mdhe,  WIDTH * HEIGHT, hist_tableMD, cdf_table,
+		//		(MAX_GREY_LEVEL+1),	histeq_mapMD);
+		local_hist_eq(buf_worka, buf_mdhe,  WIDTH, HEIGHT,
+			MAX_GREY_LEVEL,	lhe_dim);
+
+		sprintf(out_file,"bonus_median_lhe_%dx%d_%d.raw",kernel_dim,kernel_dim, lhe_dim);
+		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+			int s=write(fd, buf_mdhe, WIDTH * HEIGHT);
+			cout << "write:" << s << endl;
+			close(fd);
+		}else{
+			cout << out_file << " open failed!"  << endl;
+		}
+
+		//show cdf of image
+		string wname_mdCDF("bonus median : cdf");
+		hist(hist_tableMD, (MAX_GREY_LEVEL+1), buf_mdhe, WIDTH, HEIGHT);
+		hist_cdf(hist_tableMD, cdf_table, (MAX_GREY_LEVEL+1) , WIDTH * HEIGHT);
+		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_mdCDF, WIN_GAP_X*5+SCR_X_OFFSET,
+				WIN_GAP_Y*1+SCR_Y_OFFSET);
+
+		//show histogram equlization of the mean image
+		string wnameMDHE("median : Local Hist eq");
+		imgMDHE = cvDisplay(&imgMDHE, buf_mdhe, WIDTH, HEIGHT, WIN_GAP_X*3+SCR_X_OFFSET,
+								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameMDHE, cvFlag);
+
+		//PSNR
+		char psnr_str[100];
+		float psnr = PSNR(bufRaw, buf_mdhe, WIDTH, HEIGHT);
+		sprintf(psnr_str, "PSNR of median, lhe=%f", psnr);
+		cvPrintf(imgBar, psnr_str, cvPoint(1, 90));
+		cvShowImage( track_bar_name.c_str(), imgBar);
+	}
+	
+	{
+		//perform mean filter by kernel_dim x kernel_dim
+		mean(bufRaw, buf_workb, WIDTH, HEIGHT, kernel_dim);
+		//write output
+		int fd=-1;
+		char  out_file[100];
+		sprintf(out_file, "bonus_mean_%dx%d.raw",pos,pos );
+		//create output file
+		if( (fd = open(out_file, O_CREAT| O_WRONLY, S_IRUSR|S_IWUSR) ) != -1 ){
+			int s=write(fd, buf_workb, WIDTH * HEIGHT);
+			cout << "write:" << s << endl;
+			close(fd);
+		}else{
+			cout << out_file << " open failed!"  << endl;
+		}
+		//show image after mean filter
+		string wname_mean = "bonus : mean";
+		imgMean = cvDisplay(&imgMean, buf_workb, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+									WIN_GAP_Y+SCR_Y_OFFSET, wname_mean, cvFlag);
+
+		//show histogram of image
+		unsigned hist_tableMn[(MAX_GREY_LEVEL+1)];
+		uint8_t histeq_mapMn[(MAX_GREY_LEVEL+1)];
+		hist(hist_tableMn, (MAX_GREY_LEVEL+1), buf_workb, WIDTH, HEIGHT);
+		string wname_mnHist("bonus mean : hist");
+		draw_hist(hist_tableMn, (MAX_GREY_LEVEL+1), wname_mnHist,
+				  WIN_GAP_X+SCR_X_OFFSET, WIN_GAP_Y+SCR_Y_OFFSET, cvFlag);
+
+		//histogram equlization of Image
+		uint8_t *buf_he= (uint8_t *)malloc( WIDTH * HEIGHT);
+		unsigned cdf_table[(MAX_GREY_LEVEL+1)];
+		//hist_eq(buf_workb, buf_he,  WIDTH * HEIGHT, hist_tableMn, cdf_table,
+		//		(MAX_GREY_LEVEL+1),	histeq_mapMn);
+		local_hist_eq(buf_workb, buf_he,  WIDTH, HEIGHT,
+			MAX_GREY_LEVEL,	lhe_dim);
+	
+		//show cdf of image
+		string  wname_mnCDF("bonus mean : cdf ");
+		hist(hist_tableMn, (MAX_GREY_LEVEL+1), buf_he, WIDTH, HEIGHT);
+		hist_cdf(hist_tableMn, cdf_table, (MAX_GREY_LEVEL+1) , WIDTH * HEIGHT);
+		draw_hist(cdf_table, (MAX_GREY_LEVEL+1), wname_mnCDF, 0+SCR_X_OFFSET,
+				WIN_GAP_Y*1+SCR_Y_OFFSET);
+
+		//show histogram equlization of the mean image
+		string wnameHE("bonus mean :Local Hist Eq");
+		imgHE = cvDisplay(&imgHE, buf_he, WIDTH, HEIGHT, WIN_GAP_X*2+SCR_X_OFFSET,
+								   WIN_GAP_Y*2+SCR_Y_OFFSET, wnameHE, cvFlag);
+
+		//PSNR
+		char psnr_str[100];
+		float psnr = PSNR(bufRaw, buf_he, WIDTH, HEIGHT);
+		sprintf(psnr_str, "PSNR of mean, lhe=%f", psnr);
+		cvPrintf(imgBar, psnr_str, cvPoint(1, 120));
+		cvShowImage( track_bar_name.c_str(), imgBar);
+	}
+}
+
 /**
  *
  */
@@ -319,7 +484,9 @@ int main( int argc, char** argv )
 	imgBar = cvCreateImage(cvSize(WIDTH, HEIGHT), IPL_DEPTH_8U, 3);
 	cvSetZero(imgBar);
 	cv::namedWindow(track_bar_name, WINDOW_AUTOSIZE);
-	cv::createTrackbar("dimension", track_bar_name, &mask_dim, MAX_DIM, ProcessDim, 
+	cv::createTrackbar("mean/median kernel", track_bar_name, &kernel_dim, MAX_DIM, ProcessDim, 
+						bufRaw);
+	cv::createTrackbar("local hist eq", track_bar_name, &lhe_dim, MAX_LHE_DIM, ProcessLHE, 
 						bufRaw);
 	moveWindow(track_bar_name, 1300,0+SCR_Y_OFFSET);
 	cvShowImage( track_bar_name.c_str(), imgBar);
@@ -333,7 +500,7 @@ int main( int argc, char** argv )
 								   0+SCR_Y_OFFSET, wname_bonus, cvFlag);
 
 	//Problem solution
-	ProcessDim(mask_dim, bufRaw);
+	ProcessDim(kernel_dim, bufRaw);
 
 	cout << "press any key to quit..." << endl;
 	waitKey(0);                                          // Wait for a keystroke in the window

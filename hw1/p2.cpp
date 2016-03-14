@@ -1,8 +1,13 @@
-/** @brief DIP program to flip an image
+/** @brief PROBLEM 2: NOISE REMOVAL
  * @author <Thomas Tsai, thomas@life100.cc>
  *
- * ./bin/p2 -p m+M -n 3 -r ../../assignment/hw1/sample3.raw
- *
+ * (a)
+ * ./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample3.raw
+ * ./build/bin/p2 -a -p M -n 3 -r /path/to/sample1.raw
+ * (b), (c)
+ * ./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample4.raw
+ * ./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample1.raw
+ * (d)
  */
 #include <stdio.h>
 #include <sys/types.h>
