@@ -1,5 +1,5 @@
 /** @brief PROBLEM 1: IMAGE ENHANCEMENT (e)
- * ./bin/p1e -n 100  -D /path/to/sample2.raw
+ * ./build/bin/p1e -n 100  -D /path/to/sample2.raw
  *
  * @author <Thomas Tsai, thomas@life100.cc>
  */

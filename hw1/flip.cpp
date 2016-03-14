@@ -1,9 +1,9 @@
 /** @brief WARM-UP: SIMPLE MANIPULATIONS
  * flip an image horizontally and vertically
- * usage : ./build/bin/flip path/to/sample1.raw
+ * usage : ./build/bin/flip /path/to/sample1.raw
  * output image : 
  *  I_h.raw (flipped horizontally)
- *  I_v.raw (flipped horizontally)
+ *  I_v.raw (flipped vertically)
  *
  * @author <Thomas Tsai, d04922009@ntu.edu.tw, thomas@life100.cc>
  * 

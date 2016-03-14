@@ -4,10 +4,9 @@
  * (a)
  * ./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample3.raw
  * ./build/bin/p2 -a -p M -n 3 -r /path/to/sample1.raw
- * (b), (c)
+ * (b), (c), (d)
  * ./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample4.raw
  * ./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample1.raw
- * (d)
  */
 #include <stdio.h>
 #include <sys/types.h>

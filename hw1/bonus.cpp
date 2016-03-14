@@ -1,5 +1,5 @@
 /** @brief BONUS #1
- * ./build/bin/bonus -l 200 -n 3 -r /path/to/BONUS_0bonus.raw
+ * ./build/bin/bonus -l 200 -n 3 -r /path/to/bonus.raw
  * 
  * @author <Thomas Tsai, thomas@life100.cc>
  *

@@ -40,15 +40,44 @@
 # 0. How to show a raw file by 256x256?
 # %./build/bin/raw_show path/to/raw_file
 # ----------------------------------------------------------------------
-# 1. flip the raw file,sample1.raw, vertically and horizontally 
-# and output flipped files are "I_h.raw" and "I_v.raw".
+# WARM-UP: SIMPLE MANIPULATIONS
 # ----------------------------------------------------------------------
-# %./build/bin/flip path/to/sample1.raw
-# %./build/bin/raw_show path/to/I_h.raw
-# %./build/bin/raw_show path/to/I_v.raw
+# %./build/bin/flip /path/to/sample1.raw
+# ouput file:
+# I_h.raw (flipped horizontally)
+# I_v.raw (flipped vertically)
 # ----------------------------------------------------------------------
 # PROBLEM 1: IMAGE ENHANCEMENT
 # ----------------------------------------------------------------------
+# (a), (b), (c), (d)
+# %./build/bin/p1 -o 0x600 -n 17 -I /path/to/sample1.raw -D /path/to/sample2.raw
+# (e)
+# %./build/bin/p1e -n 100  -D /path/to/sample2.raw
 # ----------------------------------------------------------------------
 # PROBLEM 2: NOISE REMOVAL
 # ----------------------------------------------------------------------
+# (a)
+# %./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample3.raw
+# %./build/bin/p2 -a -p M -n 3 -r /path/to/sample1.raw
+# (b), (c), (d)
+# %./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample4.raw
+# %./build/bin/p2 -a -p m+M -n 3 -r /path/to/sample1.raw
+# ----------------------------------------------------------------------
+# BONUS #1
+# ----------------------------------------------------------------------
+#./build/bin/bonus -l 200 -n 3 -r /path/to/bonus.raw
+# ================================================
+# Appendix: source code lists
+# ================================================
+# README : this readme file
+# hw1.sh : auto-build script
+# CMakeLists.txt : cmake project file
+# dip-lib.cpp : DIP implementations
+# dip.h : header file of DIP implementations
+# helper.cpp : helper functions to openCV for GUI
+# helper.h : header file of opencv helper
+# flip.cpp : warm up exercise
+# p1.cpp : problem1 a,b,c,d
+# p1e.cpp : problem1 e
+# p2.cpp : problem 2
+# bonus.cpp : bonus exercise
