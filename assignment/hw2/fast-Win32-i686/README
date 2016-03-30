@@ -1,0 +1,52 @@
+Perform FAST feature detection on an image.
+
+Edward Rosten
+
+For more information on the FAST detector, visit the FAST home page at
+http://mi.eng.cam.ac.uk/~er258/work/fast.html
+
+If you use this in academic work, then please cite the following two papers:
+    Fusing Points and Lines for High Performance Tracking, E. Rosten and T. Drummond, ICCV 2005
+    Machine learning for high-speed corner detection, E. Rosten and T. Drummond, ECCV 2006
+The Bibtex entries are:
+
+@inproceedings{rosten_2005_tracking,
+    title       =    "Fusing points and lines for high performance tracking.",
+    author      =    "Edward Rosten and Tom Drummond",
+    year        =    "2005",
+    month       =    "October",
+    pages       =    "1508--1511",
+    volume      =    "2",
+    booktitle   =    "IEEE International Conference on Computer Vision",
+    notes       =    "Oral presentation",
+    url         =    "http://mi.eng.cam.ac.uk/~er258/work/rosten_2005_tracking.pdf"
+}
+
+@inproceedings{rosten_2006_machine,
+    title       =    "Machine learning for high-speed corner detection",
+    author      =    "Edward Rosten and Tom Drummond",
+    year        =    "2006",
+    month       =    "May",
+    booktitle   =    "European Conference on Computer Vision (to appear)",
+    notes       =    "Poster presentation",
+    url         =    "http://mi.eng.cam.ac.uk/~er258/work/rosten_2006_machine.pdf"
+}
+
+Usage:
+
+FastDemo [/l] [/t X] [/n X] [/b] [/?] input_image output_file
+
+Options:
+
+input_image        Input filename
+output_file        Output filename 
+/l                 Output a list of corners (instead of an image)
+/t X               Set threshold to X. Default is 20
+/n X               Use X point fast (allowed range is 9--12, default is 9)
+/s                 Perform nonmaximal suppression
+/b                 Display bibtex entries
+/?                 Display help message
+
+example:
+
+FastDemo picture.jpg detected_corners.jpg
