@@ -47,3 +47,5 @@ subplot(2,3,3),imshow(S3);
 subplot(2,3,4),imshow(BW1);
 subplot(2,3,5),imshow(BW2);
 subplot(2,3,6),imshow(BW3);
+
+Laws_mask(S1, 'L3S3', 15, 'MEAN', 'MINMAX');
