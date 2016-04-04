@@ -2,7 +2,6 @@
 % sample files are under "./raw" folder.
 %sample1.raw, sample2.raw, sample3.raw : 256x256 gray-scale
 row=256;  col=256;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %sobel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,10 +14,12 @@ S1=reshape(I,row,col);
 S1=S1';
 
 %figure,imshow(S1, 'Border','tight');
-threshold=36;
-BW1 = sobel(S1,threshold);
-figure('name','raw\sample1.raw'),imshowpair(S1,BW1,'montage');
-
+threshold=36; 
+threshold=100;
+threshold=150;
+[EM1, BW1] = sobel(S1,threshold, 1);
+figure('name','raw\sample1.raw'),imshowpair(S1,EM1,'montage');
+figure('name','raw\sample1.raw : 01 edge map'),imshowpair(S1,BW1,'montage');
 %%%%%%%%%%%%%%%%%%%%%
 raw_image='raw\sample2.raw';
 fin=fopen(raw_image,'r');
@@ -27,9 +28,9 @@ fclose(fin);
 S2=reshape(I,row,col);
 S2=S2';
 
-BW2 = sobel(S2,threshold);
-figure('name','raw\sample2.raw'),imshowpair(S2,BW2,'montage');
-
+[EM2,BW2] = sobel(S2,threshold,1);
+figure('name','raw\sample2.raw'),imshowpair(S2,EM2,'montage');
+figure('name','raw\sample2.raw : 01 edge map'),imshowpair(S2,BW2,'montage');
 %%%%%%%%%%%%%%%%%%%%%
 raw_image='raw\sample3.raw';
 fin=fopen(raw_image,'r');
@@ -38,9 +39,9 @@ fclose(fin);
 S3=reshape(I,row,col);
 S3=S3';
 
-BW3 = sobel(S3,threshold);
-figure('name','raw\sample3.raw'),imshowpair(S3,BW3,'montage');
-
+[EM3, BW3] = sobel(S3,threshold,1);
+figure('name','raw\sample3.raw'),imshowpair(S3,EM3,'montage');
+figure('name','raw\sample3.raw : 01 edge map'),imshowpair(S3,BW3,'montage');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %show all results
 figure('name','sobel Edge Detection');
@@ -61,7 +62,7 @@ direction='both';%'horizontal' | 'vertical'
 threshold = threshOut;
 BW1 = edge(S1,method,threshold,direction);
 %figure,imshow(BW1, 'Border','tight');
-figure('name',['matlab edge +' method]),imshowpair(S1,BW1,'montage');
+figure('name',['matlab +' method]),imshowpair(S1,BW1,'montage');
 
 %
 raw_image='raw\sample2.raw';
@@ -73,7 +74,7 @@ S2=S2';
 %figure,imshow(S2, 'Border','tight');
 BW2 = edge(S2,method,threshold,direction);
 %figure,imshow(BW2, 'Border','tight');
-figure('name',['matlab edge +' method]),imshowpair(S2,BW2,'montage');
+figure('name',['matlab +' method]),imshowpair(S2,BW2,'montage');
 
 %%%
 raw_image='raw\sample3.raw';
@@ -85,7 +86,7 @@ S3=S3';
 %figure,imshow(S3, 'Border','tight');
 BW3 = edge(S3,method,threshold,direction);
 %figure,imshow(BW3, 'Border','tight');
-figure('name',['matlab edge +' method]),imshowpair(S3,BW3,'montage');
+figure('name',['matlab +' method]),imshowpair(S3,BW3,'montage');
 %
 %show all results
 figure('name','matlab Sobel Edge Detection');
