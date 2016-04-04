@@ -22,15 +22,17 @@ function [EM, BEM]=sobel(image, Thresh, show)
 			dy=((2*I(i+1,j+2)+I(i,j+2)+I(i+2,j+2))-(2*I(i+1,j)+I(i,j)+I(i+2,j)));
 			%Orthogonal gradient Magnitude
 			G(i,j)=sqrt(dx.^2+dy.^2);
-            Gx(i,j)=dx;
-            Gy(i,j)=dy;
+      Gx(i,j)=dx;
+      Gy(i,j)=dy;
 		end
     end
     %h = histogram(G);
 	if show,
-		G_Nx = normalize(Gx);
+		G_Nx = abs(Gx);	
+		G_Nx = normalize(G_Nx);
 		subplot(2,2,2); imshow(G_Nx); title('Sobel gradient:Gx');
-		G_Ny = normalize(Gy);
+		G_Ny = abs(Gy);	
+		G_Ny = normalize(G_Ny);
 		subplot(2,2,3); imshow(G_Ny); title('Sobel gradient:Gy');
 		G_N = normalize(G);
 		subplot(2,2,4); imshow(G_N); title('Sobel gradient: G=Gx^2+Gy^2');
