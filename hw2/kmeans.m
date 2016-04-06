@@ -82,5 +82,6 @@ function [label, means] = kmeans(D, init)
   % reshape texture label 1xn to row * col as the original image
   map=reshape(label,[row col]);
   %normalize the range to 0.0-1.0 to show different classes
-  label = normalize(map);
+  %label = normalize(map);
+  label = map;
 end

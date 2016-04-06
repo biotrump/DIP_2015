@@ -51,9 +51,9 @@ function [EM, BEM]=sobel(image, Thresh, show)
 	% max(G, Thresh) : if G(i,j) <= threshold, G(i,j)= threshold,
 	% else if G(i,j) > threshold, G(i,j) is kept intact.
 	EM=max(G,Thresh);
-	%compare each element of EM to round(Thresh), if the element is equal
+	%EM==round(Thresh) : compare each element of EM to round(Thresh), if the element is equal
 	%to round(Thresh), it's 1 else it's 0.
-	%So if the elements of EM == round(threshold) will become "0".
+	%EM(EM==round(Thresh))=0 : So if "the elements of EM == round(threshold)" will become "0".
 	%else the elements of EM does not change.
 	EM(EM==round(Thresh))=0;% elements <= threshold becomes "0"
 	EM=uint8(EM);

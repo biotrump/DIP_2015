@@ -51,10 +51,36 @@ normalizing_types = ['MINMAX'; 'FORCON'];
     end
     fig_name=sprintf('feature-f3x3 win_size-%dx%d %s-%s', window_size, window_size, statistic_type, normalizing_type);
     print(gcf, '-dpng', fig_name);
-
+    %%%%%%%%%%%%
+    %kmeans
+    %%%%%%%%%%%%
     [label, model] = kmeans(D,k);
+    label=uint8(label);
+    %texture block for 3 animals: Zebra, Cheetah, Giraffe
+    giraffe_texture=label(220-10:220+10, 460-10:460+10);
+    cheetah_texture = label(340-10:340+10, 180-10:180+10);
+    zebra_texture=label(120-20:120+20,140-20:140+20);
+    bg_texture=label(220-10:220+10,70-10:70+10);
+   
+     m_bg = mode(mode(bg_texture));
+     label_bg=label;
+     label(label==m_bg)=0;
+     
+    m_cheetah = mode(mode(cheetah_texture));
+    label_ch=label;
+    label_ch(label==m_cheetah)=1;
+    m_giraffe = mode(mode(giraffe_texture));
+    label_g=label;
+    label_g(label==m_giraffe)=2;
+     m_zebra = mode(mode(zebra_texture));
+     label_z=label;
+     label_z(label==m_zebra)=3;
+
+    
+     label = label*60;
     fig_name=sprintf('f-3x3 win_size-%dx%d %s-%s', window_size, window_size, statistic_type, normalizing_type);
-    figure('name', fig_name),imshow(label, 'Border','tight', 'Colormap',jet(255));
+    %figure('name', fig_name),imshow(label, 'Border','tight', 'Colormap',jet(255));
+    figure('name', fig_name),imshow(label, 'Border','tight');
     print(gcf, '-dpng', fig_name);
 
     for i = 1 :  size(filter_types_5x5,1),

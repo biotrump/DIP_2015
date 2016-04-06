@@ -9,7 +9,7 @@ lthresholds=[1.5;.1;.6];
 hthresholds=[2.6;9;3];
 sigmas=[1.0;2.5;3.0];
 
-for i = 1: size(thresholds,1),
+for i = 1: size(lthresholds,1),
 	hthreshold = hthresholds(i,:);
     lthreshold = lthresholds(i,:);
     sigma = sigmas(i,:);
