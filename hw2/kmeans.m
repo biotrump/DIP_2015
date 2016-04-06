@@ -79,9 +79,42 @@ function [label, means] = kmeans(D, init)
 %  energy = dot(X(:),X(:))-2*sum(val);
   means = m;
 
-  % reshape texture label 1xn to row * col as the original image
-  map=reshape(label,[row col]);
+	% reshape texture label 1xn to row * col as the original image
+	map=reshape(label,[row col]);
+
+	%setup 4 reference texture blocks for 3 animals: Zebra, Cheetah, Giraffe
+	%and 1 background
+	giraffe_texture=map(220-10:220+10, 460-10:460+10);
+	cheetah_texture = map(340-10:340+10, 180-10:180+10);
+	zebra_texture=map(120-20:120+20,140-20:140+20);
+	bg_texture=map(220-10:220+10,70-10:70+10);
+
+	%the most frequent number in the reference block is the class number for the class
+	m_bg = mode(mode(bg_texture));
+	%label_bg=label;
+	%label(label==m_bg)=0;
+	%label(label==m_bg)=0;
+
+	%assign the class 1 to cheetah
+	m_cheetah = mode(mode(cheetah_texture));
+	label_ch=map;
+	label_ch(label_ch ~=m_cheetah)=0;
+	label_ch(label_ch ==m_cheetah)=1;
+
+	%assign the class 2 to giraffe
+	m_giraffe = mode(mode(giraffe_texture));
+	label_g=map;
+	label_g(label_g~=m_giraffe)=0;
+	label_g(label_g==m_giraffe)=2;
+
+	%assign the class 3 to zebra
+	m_zebra = mode(mode(zebra_texture));
+	label_z=map;
+	label_z(label_z~=m_zebra)=0;
+	label_z(label_z==m_zebra)=3;
+
+	map = label_ch+label_g+label_z;
+
   %normalize the range to 0.0-1.0 to show different classes
-  %label = normalize(map);
-  label = map;
+  	label = normalize(map);
 end

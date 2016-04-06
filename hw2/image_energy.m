@@ -8,7 +8,8 @@ function enery = image_energy(im_in, window_size)
 		j = 1;
 		for column = (window_size+1)/2 : im_width-((window_size-1)/2),
 			buffer = im_in(row-shift : row+shift, column-shift : column+shift);
-			enery(i, j) = sumsqr(buffer);
+			%enery(i, j) = sumsqr(buffer);%matlab 2016 only
+			enery(i, j) = sum(sum(buffer.^2));
 			j = j + 1;
 		end
 		i = i + 1;
