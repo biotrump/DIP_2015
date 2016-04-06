@@ -12,7 +12,32 @@ fclose(fin);
 imageG=reshape(I,row,col);
 imageG=imageG';
 figure('name',raw_image),imshow(imageG,'Border','tight');
+%cheetah
+hold on;
+rectangle('Position',[103 303 177 105], 'LineWidth',2, 'EdgeColor','b');
+zebra_texture = imageG(303:408, 103:280);	% it contains zebra texture
+zebra = repmat(zebra_texture, floor(row/105), floor(col/177) );
 
+%zebra
+hold on;
+rectangle('Position',[70 90 118 54], 'LineWidth',2, 'EdgeColor','g');
+giraffe_texture = imageG(90:144, 70:188);	%it contains giraffe texture
+giraffe = repmat(giraffe_texture, floor(row/54), floor(col/118) );
+
+%giraffe
+hold on;
+rectangle('Position',[450 168 46 136], 'LineWidth',2, 'EdgeColor','r');
+cheetah_texture = imageG(168:304, 450:496);	%it contains cheetah texture
+cheetah = repmat(cheetah_texture, floor(row/136), floor(col/46) );
+print(gcf, '-dpng', '3 texture bounding box');
+
+%tile up the single texture to a full image
+figure('name','zebra texture'),imshow(zebra,'Border','tight');
+print(gcf, '-dpng', 'zebra texture');
+figure('name','giraffe texture'),imshow(giraffe,'Border','tight');
+print(gcf, '-dpng', 'giraffe texture');
+figure('name','cheetah texture'),imshow(cheetah,'Border','tight');
+print(gcf, '-dpng', 'cheetah texure');
 %feature computation
 %giraffe needs smaller window size
 window_sizes = [7; 25 ; 15]; %usually 13x13 or 15x15

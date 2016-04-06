@@ -112,7 +112,7 @@ function [label, means] = kmeans(D, init)
 	label_z=map;
 	label_z(label_z~=m_zebra)=0;
 	label_z(label_z==m_zebra)=3;
-
+    %merge 3 maps into 1 map
 	map = label_ch+label_g+label_z;
 
   %normalize the range to 0.0-1.0 to show different classes
