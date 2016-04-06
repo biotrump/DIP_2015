@@ -5,7 +5,7 @@
 %  @RETURN label: cluster map of original image by row x col, M * N
 %  @RETURN means: trained model structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-function [label, means] = kmeans(D, init)
+function [label, means] = kmeans(D, init, zebra, cheetah, giraffe)
   %squeeze(D(i,j,:)); % feature vector as a column vector
   [row, col, depth]=size(D);
   % D, 3D matrix M * N * d => 2D matrix (M * N) * d => total M * N row vectors with dimension d
@@ -77,6 +77,7 @@ function [label, means] = kmeans(D, init)
   % 9 or 25 is the filter3x3 or filter5x5
   %If A is a matrix, then sum(A) returns a row vector containing the sum of each column.
 %  energy = dot(X(:),X(:))-2*sum(val);
+	%return k centers
   means = m;
 
 	% reshape texture label 1xn to row * col as the original image
@@ -110,11 +111,22 @@ function [label, means] = kmeans(D, init)
 	%assign the class 3 to zebra
 	m_zebra = mode(mode(zebra_texture));
 	label_z=map;
-	label_z(label_z~=m_zebra)=0;
-	label_z(label_z==m_zebra)=3;
+	label_z(label_z~=m_zebra)=0;	%non zebra is set to 0
+	label_z(label_z==m_zebra)=3;	%zebra class is set to 1
     %merge 3 maps into 1 map
 	map = label_ch+label_g+label_z;
 
+    [row,col]=size(label_z);
+    zebra=zebra(1:row, 1:col);
+	zebra(label_z==0)=0;
+    cheetah = cheetah(1:row, 1:col);
+	cheetah(label_ch==0)=0;
+    giraffe = giraffe(1:row, 1:col);
+	giraffe(label_g==0)=0;
+	final_texture=zebra+cheetah+giraffe;
+	
+    figure('name', 'good'),imshow(final_texture, 'Border','tight');
+    
   %normalize the range to 0.0-1.0 to show different classes
   	label = normalize(map);
 end
