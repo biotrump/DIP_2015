@@ -1,64 +1,73 @@
-row=324;  col=324;
-raw_image='raw\sample4.raw';
-fin=fopen(raw_image,'r');
-I=fread(fin,row*col,'uint8=>uint8');
-fclose(fin);
-S1=reshape(I,row,col);
-S1=S1';
-%k=figure,imshow(S1);
-%corners1 = detectFASTFeatures(S1);
-%figure,imshow(S1); hold on;
-%plot(corners1.selectStrongest(50));
-S1_HE=histeq(S1);
-%figure,imshow(S1_HE);
-corners1_HE = detectFASTFeatures(S1_HE);
-figure,imshow(S1_HE, 'Border','tight'); hold on;
-plot(corners1_HE.selectStrongest(50));
+function varargout = p2(varargin)
+% P2 MATLAB code for p2.fig
+%      P2, by itself, creates a new P2 or raises the existing
+%      singleton*.
+%
+%      H = P2 returns the handle to a new P2 or the handle to
+%      the existing singleton*.
+%
+%      P2('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in P2.M with the given input arguments.
+%
+%      P2('Property','Value',...) creates a new P2 or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before p2_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to p2_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
 
-raw_image='..\raw\sample5.raw';
-fin=fopen(raw_image,'r');
-I=fread(fin,row*col,'uint8=>uint8');
-fclose(fin);
-S2=reshape(I,row,col);
-S2=S2';
-%k=figure,imshow(S2);
-%corners2 = detectFASTFeatures(S2);
-%figure,imshow(S2); hold on;
-%plot(corners2.selectStrongest(30));
-S2_HE=histeq(S2);
-%figure,imshow(S2_HE);
-corners2_HE = detectFASTFeatures(S2_HE);
-figure,imshow(S2_HE,'Border','tight'); hold on;
-plot(corners2_HE.selectStrongest(50));
+% Edit the above text to modify the response to help p2
 
-raw_image='..\raw\sample6.raw';
-fin=fopen(raw_image,'r');
-I=fread(fin,row*col,'uint8=>uint8');
-fclose(fin);
-S3=reshape(I,row,col);
-S3=S3';
-%k=figure,imshow(S3);
-%corners3 = detectFASTFeatures(S3);
-%figure,imshow(S3); hold on;
-%plot(corners3.selectStrongest(30));
-S3_HE=histeq(S3);
-%figure,imshow(S3_HE);
-corners3_HE = detectFASTFeatures(S3_HE);
-figure,imshow(S3_HE,'Border','tight'); hold on;
-plot(corners3_HE.selectStrongest(50));
+% Last Modified by GUIDE v2.5 08-Apr-2016 00:53:57
 
-raw_image='..\raw\sample7.raw';
-fin=fopen(raw_image,'r');
-I=fread(fin,row*col,'uint8=>uint8');
-fclose(fin);
-S4=reshape(I,row,col);
-S4=S4';
-%k=figure,imshow(S4);
-%corners4 = detectFASTFeatures(S4);
-%figure,imshow(S4); hold on;
-%plot(corners4.selectStrongest(30));
-S4_HE=histeq(S4);
-%figure,imshow(S4_HE);
-corners4_HE = detectFASTFeatures(S4_HE);
-figure,imshow(S4_HE,'Border','tight'); hold on;
-plot(corners4_HE.selectStrongest(50));
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @p2_OpeningFcn, ...
+                   'gui_OutputFcn',  @p2_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before p2 is made visible.
+function p2_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to p2 (see VARARGIN)
+
+% Choose default command line output for p2
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes p2 wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+
+% --- Outputs from this function are returned to the command line.
+function varargout = p2_OutputFcn(hObject, eventdata, handles) 
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+varargout{1} = handles.output;
