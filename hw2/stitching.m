@@ -1,7 +1,9 @@
 %0. Given 2 images Ia,Ib
-% @param Ia, Ib images to stitch together and size(Ia) == size(Ib)
+% @param Ia image is always in the center of the canvas, it can be larger than Ib
+% @param Ib images to stitch to Ia, this acts as a moving window over the
+% canvas
 % @param startc, startr : the start position of stitching to save time
-function sI = findoverlap(Ia, Ib, startc, startr, endc, endr)
+function sI = stitching(Ia, Ib, startc, startr, endc, endr)
 	%default start origin
 	[row, col]=size(Ia);
 	if (nargin < 3)
@@ -54,7 +56,7 @@ function sI = findoverlap(Ia, Ib, startc, startr, endc, endr)
 		end
 	end
 	%If the minimum r does exist, stitching A and B by overlapped region O.
-	if max_r > 0.1,
+	if max_r > 0.001,
 		%disp the bounding box and draw the rectangle
 		Cia(max_org(1):max_org(1)+row-1,max_org(2):max_org(2)+col-1)=Ib;
         sI=Cia;

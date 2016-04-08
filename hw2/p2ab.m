@@ -1,6 +1,6 @@
 %p2ab : image stiching
 % sample files are under "./raw" folder.
-%sample4.raw, sample5.raw, sample6.raw, sample6.raw :324x324 gray-scale
+%sample4.raw, sample5.raw, sample6.raw, sample7.raw :324x324 gray-scale
 row=324;  col=324;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 thresholds=[50;100;250];
@@ -22,13 +22,37 @@ for i = 1 : size(raw_images,1),
 %    hold on
 %plot(c{i}(:,1), c{i}(:,2), 'r*');
 end
+
 %sample5 stitching to sample4
-startc=col+50;
-startr=row+50;
-endr=2*row;
+startc=540;
+startr=400;
+endc=570;
+endr=440;
+%stitching S2 to S1
+sI1=stitching(S{1}, S{2}, startc, startr, endc, endr);
+figure,imshow(sI1, 'Border','tight');
+BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+%sI1 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+
+%stiching S3=sample6.raw to 
+startc=260;
+startr=530;
+endc=300;
+endr=590;
+sI3=stitching(S{2}, S{3}, startc, startr, endc, endr);
+figure,imshow(sI3, 'Border','tight');
+BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+sI3 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+
+%stiching S4=sample7.raw to 
+startc=100;
+startr=100;
 endc=2*col;
-sI=findoverlap(S{1}, S{2}, startc, startr, endc, endr);
-figure,imshow(sI, 'Border','tight');
+endr=2*row;
+sI2=stitching(S{1}, S{4}, startc, startr, endc, endr);
+figure,imshow(sI2, 'Border','tight');
+BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+%sI2 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
 
 %waitforbuttonpress;
 %point1 = get(gcf,'CurrentPoint'); % button down detected
