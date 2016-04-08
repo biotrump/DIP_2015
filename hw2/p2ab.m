@@ -9,7 +9,7 @@ S={};
 S_HE={};
 c={};
 for i = 1 : size(raw_images,1),
-	%load image 
+	%load image
 	raw_image=raw_images(i,:);
 	fin=fopen(raw_image,'r');
 	I=fread(fin,row*col,'uint8=>uint8');
@@ -22,15 +22,23 @@ for i = 1 : size(raw_images,1),
 %    hold on
 %plot(c{i}(:,1), c{i}(:,2), 'r*');
 end
-waitforbuttonpress;
-point1 = get(gcf,'CurrentPoint'); % button down detected
-rect = [point1(1,1) point1(1,2) 50 100];
-[r2] = dragrect(rect);
+%sample5 stitching to sample4
+startc=col+50;
+startr=row+50;
+endr=2*row;
+endc=2*col;
+sI=findoverlap(S{1}, S{2}, startc, startr, endc, endr);
+figure,imshow(sI, 'Border','tight');
+
+%waitforbuttonpress;
+%point1 = get(gcf,'CurrentPoint'); % button down detected
+%rect = [point1(1,1) point1(1,2) 50 100];
+%[r2] = dragrect(rect);
 
 %rotate 5 deg couterclockwise
-X = gpuArray(S_HE{4});
-Y = imrotate(X, 5, 'loose', 'bilinear');
-figure,imshow(Y, 'Border','tight');
+%X = gpuArray(S_HE{4});
+%Y = imrotate(X, 5, 'loose', 'bilinear');
+%figure,imshow(Y, 'Border','tight');
 
 %padding 0 around
 stiching_board=padarray(S_HE{1},[row col]);
@@ -62,7 +70,7 @@ end
 
 for i = 1: size(thresholds,1),
 	threshold = thresholds(i,:);
-	%load image 
+	%load image
 	raw_image=raw_images(1,:);
 	fin=fopen(raw_image,'r');
 	I=fread(fin,row*col,'uint8=>uint8');
@@ -87,14 +95,14 @@ for i = 1: size(thresholds,1),
 	fclose(fin);
 	S2=reshape(I,row,col);
 	S2=S2';
-	
+
 	[EM2,BW2] = sobel(S2,threshold,1);
 	figure('name',raw_image),imshowpair(S2, EM2,'montage');
 	fig_name = sprintf('%s : sobel 01 edge map thr=%d', raw_image, threshold);
 	figure('name',fig_name),imshowpair(S2,BW2,'montage');%title(fig_name);
 	fig_name = sprintf('sample2-sobel-01-edgemap-thre-%d',threshold);
 	print(gcf, '-dpng', fig_name);
-	
+
 	%%%%%%%%%%%%%%%%%%%%%
 	raw_image=raw_images(3,:);;
 	fin=fopen(raw_image,'r');
@@ -102,14 +110,14 @@ for i = 1: size(thresholds,1),
 	fclose(fin);
 	S3=reshape(I,row,col);
 	S3=S3';
-	
+
 	[EM3, BW3] = sobel(S3,threshold,1);
 	figure('name',raw_image),imshowpair(S3, EM3,'montage');
 	fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
 	figure('name',fig_name),imshowpair(S3,BW3,'montage');%title(fig_name);
 	fig_name = sprintf('sample3-sobel-01-edgemap-thre-%d',threshold);
 	print(gcf, '-dpng', fig_name);
-	
+
 	%%%%%%%%%%%%%%%%%%%%%
 	raw_image=raw_images(4,:);;
 	fin=fopen(raw_image,'r');
@@ -117,7 +125,7 @@ for i = 1: size(thresholds,1),
 	fclose(fin);
 	S4=reshape(I,row,col);
 	S4=S4';
-	
+
 	[EM3, BW3] = sobel(S4,threshold,1);
 	figure('name',raw_image),imshowpair(S3, EM3,'montage');
 	fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
@@ -136,4 +144,3 @@ for i = 1: size(thresholds,1),
 	fig_name = sprintf('sobel-edge-detect-thr-%d',threshold);
 	print(gcf, '-dpng', fig_name);
 end
-
