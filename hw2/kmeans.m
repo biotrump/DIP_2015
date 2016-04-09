@@ -5,7 +5,7 @@
 %  @RETURN label: cluster map of original image by row x col, M * N
 %  @RETURN means: trained model structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-function [label, means] = kmeans(D, init, zebra, cheetah, giraffe)
+function [label, means, final_texture] = kmeans(D, init, zebra, cheetah, giraffe)
   %squeeze(D(i,j,:)); % feature vector as a column vector
   [row, col, depth]=size(D);
   % D, 3D matrix M * N * d => 2D matrix (M * N) * d => total M * N row vectors with dimension d
@@ -15,16 +15,19 @@ function [label, means] = kmeans(D, init, zebra, cheetah, giraffe)
 % We can randomly pick K centers as a start condition, but how to choose randomly?
 % Every pixel is assigned a random class, so K random centers are generated as the start condition.
 %X: d x n data matrix, where n = M * N, total pixel number
-
-  n = size(X,2);
-  if numel(init)==1
-      k = init; % generating 1xn matrix which is randomly classified from 1,2,...k
-      label = ceil(k*rand(1,n));  % rand(1,n) generating 1 * n matrix whose value is [0.0-1.0]
-                                % label : 1xn whose value is 1 to k
-  elseif numel(init)==n
-      label = init;   %predefined labels for each pixel in 1xn matrix
-  end
-  last = 0;
+	persistent my_count;
+	if isempty(my_count)
+	    my_count=1;
+	end
+	n = size(X,2);
+	if numel(init)==1
+	  k = init; % generating 1xn matrix which is randomly classified from 1,2,...k
+	  label = ceil(k*rand(1,n));  % rand(1,n) generating 1 * n matrix whose value is [0.0-1.0]
+	                            % label : 1xn whose value is 1 to k
+	elseif numel(init)==n
+	  label = init;   %predefined labels for each pixel in 1xn matrix
+	end
+	last = 0;
   while any(label ~= last)  %~= means "not equal", stop condition if K classes do not change.
     % u = column vector, all the unique numbers in the lable list
     %[C,ia,ic] = unique(A), If A is a vector, then C = A(ia) and A = C(ic).
@@ -84,7 +87,7 @@ function [label, means] = kmeans(D, init, zebra, cheetah, giraffe)
 	map=reshape(label,[row col]);
 
 	%setup 4 reference texture blocks for 3 animals: Zebra, Cheetah, Giraffe
-	%and 1 background
+	%and 1 background (y1:y2,x1:x2)
 	giraffe_texture=map(220-10:220+10, 460-10:460+10);
 	cheetah_texture = map(340-10:340+10, 180-10:180+10);
 	zebra_texture=map(120-20:120+20,140-20:140+20);
@@ -99,7 +102,9 @@ function [label, means] = kmeans(D, init, zebra, cheetah, giraffe)
 	%assign the class 1 to cheetah
 	m_cheetah = mode(mode(cheetah_texture));
 	label_ch=map;
+	%zero out all except the desired class, cheetah
 	label_ch(label_ch ~=m_cheetah)=0;
+	%assign the cheetah class#, 1
 	label_ch(label_ch ==m_cheetah)=1;
 
 	%assign the class 2 to giraffe
@@ -116,17 +121,19 @@ function [label, means] = kmeans(D, init, zebra, cheetah, giraffe)
     %merge 3 maps into 1 map
 	map = label_ch+label_g+label_z;
 
+	%crop the desired animal cluster from the homogenous texture image
     [row,col]=size(label_z);
-    zebra=zebra(1:row, 1:col);
-	zebra(label_z==0)=0;
-    cheetah = cheetah(1:row, 1:col);
-	cheetah(label_ch==0)=0;
-    giraffe = giraffe(1:row, 1:col);
-	giraffe(label_g==0)=0;
-	final_texture=zebra+cheetah+giraffe;
-	
-    figure('name', 'good'),imshow(final_texture, 'Border','tight');
-    
-  %normalize the range to 0.0-1.0 to show different classes
-  	label = normalize(map);
+    zebra=zebra(1:row, 1:col);	%homegenous zebra texture
+	zebra(label_z==0)=0;	%mask out non-zebra, so only zebra region of the correct texture left
+    cheetah = cheetah(1:row, 1:col);%homegenous cheetah texture
+	cheetah(label_ch==0)=0;%mask out non-cheetah, so only cheetah region of the correct texture left
+    giraffe = giraffe(1:row, 1:col);%homegenous giraffe texture
+	giraffe(label_g==0)=0;%mask out non-giraffe, so only giraffe region of the correct texture left
+	final_texture=zebra+cheetah+giraffe;	%sum(union) of the 3 individual clusters together.
+%	fig_name=sprintf('right texture:%d',my_count);
+%    figure('name', fig_name),imshow(final_texture, 'Border','tight');
+	my_count = my_count +1;
+
+	%normalize the range to 0.0-1.0 to show different classes
+	label = normalize(map);
 end

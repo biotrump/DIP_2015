@@ -38,7 +38,7 @@ end
 		end
 	elseif filter_type(2)=='5', %5x5 mask
 		L5 = [1 4 6 4 1]; E5 = [-1 -2 0 2 1]; S5 = [-1 0 2 0 -1];
-		W5 = [-1 2 0 -2 1]; R5 = [1 -4 6 -4 1]; L5L5mask = L5' * L5;
+		R5 = [1 -4 6 -4 1]; W5 = [-1 2 0 -2 1];  L5L5mask = L5' * L5;
 		switch filter_type
 			case 'L5L5'
 				filter_mask = L5' * L5;

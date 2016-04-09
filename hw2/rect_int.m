@@ -1,4 +1,4 @@
-% @brief given r1,r2 rectangles and find the rectangle to the global
+% @brief given r1,r2 rectangles and find the intersection rectangle to the global
 % coordination and also the local coordinations to r1 and r2
 % @param r1 = [x1 y1 x2 y2]
 % @param r2 = [x3 y3 x4 y4]
