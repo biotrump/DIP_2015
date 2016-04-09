@@ -23,148 +23,100 @@ for i = 1 : size(raw_images,1),
 %plot(c{i}(:,1), c{i}(:,2), 'r*');
 end
 
-%sample5 stitching to sample4
-startc=540;
+%1. sample5 stitching to sample4
+startc=550;
 startr=400;
-endc=570;
+endc=580;
 endr=440;
+[sI1, corner_S1, corner_S2, rect_o1]=stitching(S{1}, S{2}, startc, startr, endc, endr);
 %stitching S2 to S1
-sI1=stitching(S{1}, S{2}, startc, startr, endc, endr);
-figure,imshow(sI1, 'Border','tight');
-BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+fig_name =sprintf('%s + %s',raw_images(1,:), raw_images(2,:));
+figure('name', fig_name),imshow(sI1, 'Border','tight');
+fig_name = sprintf('sample4-sample5');
+print(gcf, '-dpng', fig_name);
+
+%BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
 %sI1 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
 
-%stiching S3=sample6.raw to 
+%2. stiching S4=sample7.raw to S1=sample4.raw
+startc=200;
+startr=600;
+endc=230;
+endr=630;
+[sI2, corner_S1, corner_S4, rect_o3]=stitching(S{1}, S{4}, startc, startr, endc, endr);
+fig_name =sprintf('%s + %s',raw_images(1,:), raw_images(4,:));
+figure('name',fig_name),imshow(sI2, 'Border','tight');
+fig_name = sprintf('sample4-sample7');
+print(gcf, '-dpng', fig_name);
+%BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+%sI2 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+%stitching Sample4+Sample5+sample7
+sI1(corner_S4(1):corner_S4(1)+row-1 , corner_S4(2):corner_S4(2)+col-1) = S{4};
+%fig_name =sprintf('%s + %s',raw_images(1,:), raw_images(4,:));
+figure('name','sample4 +  sample5 +sample7'),imshow(sI1, 'Border','tight');
+
+%3. stiching S2=sample5.raw to S3=sample6.raw
 startc=260;
 startr=530;
-endc=300;
-endr=590;
-sI3=stitching(S{2}, S{3}, startc, startr, endc, endr);
-figure,imshow(sI3, 'Border','tight');
-BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
-sI3 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+endc=290;
+endr=560;
+[sI3, corner_SC2, corner_S3, rect_o2]=stitching(S{2}, S{3}, startc, startr, endc, endr);
+fig_name =sprintf('%s + %s',raw_images(2,:), raw_images(3,:));
+figure('name',fig_name),imshow(sI3, 'Border','tight');
+fig_name = sprintf('sample5-sample6');
+print(gcf, '-dpng', fig_name);
+%BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+%sI3 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+%translate (S2, ie,sample5) from center of canvas to  corner_S2
+tr= corner_S2 - corner_SC2;
+%stitching (S1 + S2) + (S1 + S4)  + (S2 +  S3)
+sI1=padarray(sI1,[50 50], 'replicate','post');
+sI1(corner_S3(1)+tr(1):corner_S3(1)+tr(1) + row-1 , corner_S3(2)+tr(2):corner_S3(2)+tr(2)+col-1) = S{3};
+figure('name','sample4 +  sample5 + sample7 + sample6'),imshow(sI1, 'Border','tight');
+%draw inscribe rectangle
+corner_S3 = corner_S3 + tr;	%translat corner of S3 by tr
+%x1 of corner_S1(y1, x1) -> x2 of corner_S3(y2, x2)
+%y1 of corner_S2(y1, x1) -> y2 of corner_S4(y2, x2)
+hold on;
+% draw rectangle [x y w h]
+x=corner_S1(2);
+y=corner_S2(1);
+w = (corner_S3(2) + col -1) - corner_S1(2) + 1;
+h = (corner_S4(1) + row -1) - corner_S2(1) + 1;
+rectangle('Position', [x y w h]);
 
-%stiching S4=sample7.raw to 
-startc=100;
-startr=100;
-endc=2*col;
-endr=2*row;
-sI2=stitching(S{1}, S{4}, startc, startr, endc, endr);
-figure,imshow(sI2, 'Border','tight');
-BBox=bbox(sI);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
-%sI2 = sI(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+BBox=bbox(sI1);   %bounding box of current stitching (y0,x0,y1,x1) in the canvas
+final = sI1(BBox(1):BBox(3),BBox(2):BBox(4));  %the bounding box as a source image to stiching
+figure('name','final:sample4 +  sample5 + sample7 + sample6'),imshow(final, 'Border','tight');
+%crop image
+crop_rect = sI1(y:y+h-1,x:x+w-1);
+fig_name=sprintf('crop width=%d height=%d', w,h);
+figure('name', fig_name),imshow(crop_rect, 'Border','tight');
+%internal rectangle
 
-%waitforbuttonpress;
-%point1 = get(gcf,'CurrentPoint'); % button down detected
-%rect = [point1(1,1) point1(1,2) 50 100];
-%[r2] = dragrect(rect);
+%
+    if 0,
+    %rotate 5 deg couterclockwise
+    %X = gpuArray(S_HE{4});
+    %Y = imrotate(X, 5, 'loose', 'bilinear');
+    %figure,imshow(Y, 'Border','tight');
 
-%rotate 5 deg couterclockwise
-%X = gpuArray(S_HE{4});
-%Y = imrotate(X, 5, 'loose', 'bilinear');
-%figure,imshow(Y, 'Border','tight');
-
-%padding 0 around
-stiching_board=padarray(S_HE{1},[row col]);
-figure,imshow(stiching_board, 'Border','tight');
-set(ImageH, 'HitTest', 'off');
-set(gca, 'ButtonDownFcn', 'moveaxis(1)', 'Tag', 'legend');
-
-
-Mc=0;Mr=0;
-maxDiff = -10000;
-for r=1 : 2*row,
-	for c=1 : 2*col,
-        %diff the overlap and sum up
-        if r <= row && c <= col,
-            clip_win=S_HE{1}(1:r,1:c) - S_HE{2}(row-r+1:row, col-c+1:col);
-        else
-            clip_win=S_HE{1}(r-row:row,c-col:col) - S_HE{2}(1:2*row-r+1, 1:2*col-c+1);
-        end
-        [m,n]=size(clip_win);
-		sa(r,c) = sumabs(clip_win)/(m*n);
-        if sa(r,c) > maxDiff,
-            maxDiff = sa(r,c);
-            Mr=r;Mc=c;
-        end
-	end
-end
-	sa=normalize(sa);
-	figure,imshow(sa, 'Border','tight');
-
-for i = 1: size(thresholds,1),
-	threshold = thresholds(i,:);
-	%load image
-	raw_image=raw_images(1,:);
-	fin=fopen(raw_image,'r');
-	I=fread(fin,row*col,'uint8=>uint8');
-	fclose(fin);
-	S4=reshape(I,row,col);
-	S4=S4';
-	S4_HE=histeq(S4);
-	figure('name',raw_image),imshowpair(S4, S4_HE,'montage');
-	%figure,imshow(S1, 'Border','tight');
-
-	%[EM1, BW1] = sobel(S1,threshold, 1);
-	figure('name',raw_image),imshowpair(S1, EM1,'montage');
-	fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
-	figure('name',fig_name),imshowpair(S1,BW1,'montage');%title(fig_name);
-	fig_name = sprintf('sample1-sobel-01-edgemap-thre-%d',threshold);
-	print(gcf, '-dpng', fig_name);
-
-	%%%%%%%%%%%%%%%%%%%%%
-	raw_image=raw_images(2,:);;
-	fin=fopen(raw_image,'r');
-	I=fread(fin,row*col,'uint8=>uint8');
-	fclose(fin);
-	S2=reshape(I,row,col);
-	S2=S2';
-
-	[EM2,BW2] = sobel(S2,threshold,1);
-	figure('name',raw_image),imshowpair(S2, EM2,'montage');
-	fig_name = sprintf('%s : sobel 01 edge map thr=%d', raw_image, threshold);
-	figure('name',fig_name),imshowpair(S2,BW2,'montage');%title(fig_name);
-	fig_name = sprintf('sample2-sobel-01-edgemap-thre-%d',threshold);
-	print(gcf, '-dpng', fig_name);
-
-	%%%%%%%%%%%%%%%%%%%%%
-	raw_image=raw_images(3,:);;
-	fin=fopen(raw_image,'r');
-	I=fread(fin,row*col,'uint8=>uint8');
-	fclose(fin);
-	S3=reshape(I,row,col);
-	S3=S3';
-
-	[EM3, BW3] = sobel(S3,threshold,1);
-	figure('name',raw_image),imshowpair(S3, EM3,'montage');
-	fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
-	figure('name',fig_name),imshowpair(S3,BW3,'montage');%title(fig_name);
-	fig_name = sprintf('sample3-sobel-01-edgemap-thre-%d',threshold);
-	print(gcf, '-dpng', fig_name);
-
-	%%%%%%%%%%%%%%%%%%%%%
-	raw_image=raw_images(4,:);;
-	fin=fopen(raw_image,'r');
-	I=fread(fin,row*col,'uint8=>uint8');
-	fclose(fin);
-	S4=reshape(I,row,col);
-	S4=S4';
-
-	[EM3, BW3] = sobel(S4,threshold,1);
-	figure('name',raw_image),imshowpair(S3, EM3,'montage');
-	fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
-	figure('name',fig_name),imshowpair(S3,BW3,'montage');%title(fig_name);
-	fig_name = sprintf('sample3-sobel-01-edgemap-thre-%d',threshold);
-	print(gcf, '-dpng', fig_name);
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	%show all results
-	figure('name','sobel Edge Detection');
-	subplot(2,3,1),imshow(S1);
-	subplot(2,3,2),imshow(S2);
-	subplot(2,3,3),imshow(S3);
-	subplot(2,3,4),imshow(BW1);
-	subplot(2,3,5),imshow(BW2);
-	subplot(2,3,6),imshow(BW3);
-	fig_name = sprintf('sobel-edge-detect-thr-%d',threshold);
-	print(gcf, '-dpng', fig_name);
-end
+        [EM3, BW3] = sobel(S4,threshold,1);
+        figure('name',raw_image),imshowpair(S3, EM3,'montage');
+        fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
+        figure('name',fig_name),imshowpair(S3,BW3,'montage');%title(fig_name);
+        fig_name = sprintf('sample3-sobel-01-edgemap-thre-%d',threshold);
+        print(gcf, '-dpng', fig_name);
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %show all results
+        figure('name','sobel Edge Detection');
+        subplot(2,3,1),imshow(S1);
+        subplot(2,3,2),imshow(S2);
+        subplot(2,3,3),imshow(S3);
+        subplot(2,3,4),imshow(BW1);
+        subplot(2,3,5),imshow(BW2);
+        subplot(2,3,6),imshow(BW3);
+        fig_name = sprintf('sobel-edge-detect-thr-%d',threshold);
+        print(gcf, '-dpng', fig_name);
+    end
+%end
