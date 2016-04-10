@@ -1,8 +1,9 @@
-%
+% laplacian 2nd order edge filter
 % @param image input image
-% @param
-% @return zc_4
-% @return zc_8
+% @param threshold for edge detection
+% @param show to show the intermediate steps
+% @return zc_4	4-neighbors laplacian edge map
+% @return zc_8	8-neighbors laplacian edge map
 function [zc_4, zc_8]=laplacian(image, threshold, show)
 	if nargin < 3
 	    show=0;
@@ -13,7 +14,7 @@ function [zc_4, zc_8]=laplacian(image, threshold, show)
     end
 
     % perform laplacian
-    %Filter Masks
+    % Filter Masks
     LKF_4H=[0 1 0;1 -4 1; 0 1 0];   % 4 neighbors
     LKF_8H=[1 1 1;1 -8 1; 1 1 1];   % 8 neighbors
     %pad image border for 3x3 kernel
@@ -34,9 +35,9 @@ else
 end
     fig_name=sprintf('laplacian operator %d', my_count);
     figure('name',fig_name);
-    subplot(1,3,1),imshow(image);title('original');
-	subplot(1,3,2),imshow(normalize(L_4H));title('4-neighbor');
-	subplot(1,3,3),imshow(normalize(L_8H));title('8-neighbor');
+    subplottight(1,3,1),imshow(image);title('original');
+	subplottight(1,3,2),imshow(normalize(L_4H));title('4-neighbor');
+	subplottight(1,3,3),imshow(normalize(L_8H));title('8-neighbor');
     fig_name=sprintf('laplacian-operator-%d', my_count);
     print(gcf, '-dpng', fig_name);
 
@@ -51,4 +52,5 @@ end
 %    fig_name=sprintf('fig%d zerocrossing 8 neighbors', my_count);
 %    figure('name',fig_name);
 %    imshow(zc_8*255);title('zc 8');
+	my_count=my_count+1;
 end

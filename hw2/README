@@ -4,6 +4,43 @@
 % ID %: D04922009
 % email: d04922009@ntu.edu.tw, thomas@life100.cc
 %###############################################################################%  
+% PROBLEM 1: EDGE DETECTION   
+% Implementation: main program for problem 1a sobel edge detection
+% M-file name: p1a.m  
+% Usage: p1a  
+% Output image:   
+% Parameters: no
+% -------------------------------------------------------------------------------
+% subroutine : sobel.m
+% -------------------------------------------------------------------------------
+% function [EM, BEM]=sobel(image, Thresh, show)
+% http://deepeshrawat987.blogspot.tw/2013/04/edge-detection.html
+% http://blog.yam.com/chu24688/article/50729404
+% @PARAM image uint8 grey image
+% @PARAM Thresh=100
+%###############################################################################%  
+% PROBLEM 1: EDGE DETECTION   
+% Implementation: main program for problem 1b laplacian and LOG edge detection
+% M-file name: p1b.m  
+% Usage: p1b
+% Output image: laplacian-*, LOG-*  
+% Parameters: no
+% -------------------------------------------------------------------------------
+% subroutine : laplacian.m
+% -------------------------------------------------------------------------------
+% function [zc_4, zc_8]=laplacian(image, threshold, show)
+% laplacian 2nd order edge filter
+% @param image input image
+% @param threshold for edge detection
+% @param show to show the intermediate steps
+% @return zc_4	4-neighbors laplacian edge map
+% @return zc_8	8-neighbors laplacian edge map
+% -------------------------------------------------------------------------------
+% subroutine : zerocross.m
+% -------------------------------------------------------------------------------
+% function zc = zerocross(f, neighbors, threshold)
+% Finds the zero crossings of the 2-dimensional function f
+%###############################################################################%  
 % PROBLEM 2: GEOMETRICAL MODIFICATION   
 % Implementation: main program for problem 2a and proble 2b
 % M-file name: p2ab.m  
