@@ -5,13 +5,11 @@ function [theta, deg]=circle_2pi(dx,dy)
   %    dx=cos(i*pi/180);
       r = sqrt(dx^2+dy^2);
       theta = asin(dy/r);
-      if dx <0 && dy > 0,
+      if dx <=0 && dy > 0,
         theta = -theta + pi;
-      end
-      if dx <0 && dy <= 0,
+      elseif dx <=0 && dy <= 0,
         theta = abs(theta) + pi;
-      end
-      if dx >0 && dy < 0,
+      elseif dx >0 && dy < 0,
         theta = theta + 2*pi;
       end
       deg = theta * 180.0 / pi;

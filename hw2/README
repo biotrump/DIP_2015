@@ -1,14 +1,14 @@
 % DIP Homework Assignment #2
 % April 12, 2016
-% Name: ½²ºû·s Thomas Tsai
+% Name: è”¡ç¶­æ–° Thomas Tsai
 % ID %: D04922009
 % email: d04922009@ntu.edu.tw, thomas@life100.cc
-%###############################################################################%  
-% PROBLEM 1: EDGE DETECTION   
+%###############################################################################%
+% PROBLEM 1: EDGE DETECTION
 % Implementation: main program for problem 1a sobel edge detection
-% M-file name: p1a.m  
-% Usage: p1a  
-% Output image:   
+% M-file name: p1a.m
+% Usage: p1a
+% Output image:
 % Parameters: no
 % -------------------------------------------------------------------------------
 % subroutine : sobel.m
@@ -18,12 +18,12 @@
 % http://blog.yam.com/chu24688/article/50729404
 % @PARAM image uint8 grey image
 % @PARAM Thresh=100
-%###############################################################################%  
-% PROBLEM 1: EDGE DETECTION   
+%###############################################################################%
+% PROBLEM 1: EDGE DETECTION
 % Implementation: main program for problem 1b laplacian and LOG edge detection
-% M-file name: p1b.m  
+% M-file name: p1b.m
 % Usage: p1b
-% Output image: laplacian-*, LOG-*  
+% Output image: laplacian-*, LOG-*
 % Parameters: no
 % -------------------------------------------------------------------------------
 % subroutine : laplacian.m
@@ -40,13 +40,25 @@
 % -------------------------------------------------------------------------------
 % function zc = zerocross(f, neighbors, threshold)
 % Finds the zero crossings of the 2-dimensional function f
-%###############################################################################%  
-% PROBLEM 2: GEOMETRICAL MODIFICATION   
+%###############################################################################%
+% PROBLEM 1: EDGE DETECTION
+% Implementation: main program for problem 1b laplacian and LOG edge detection
+% M-file name: p1c.m
+% Usage: p1c
+% Output image: laplacian-*, LOG-*
+% Parameters: no
+% -------------------------------------------------------------------------------
+% subroutine : canny.m
+% -------------------------------------------------------------------------------
+% Canny Edge Detector
+% function [sFinal,thresh] = canny(img, mLow, mHigh, sig)
+%###############################################################################%
+% PROBLEM 2: GEOMETRICAL MODIFICATION
 % Implementation: main program for problem 2a and proble 2b
-% M-file name: p2ab.m  
-% Usage: p2ab  
+% M-file name: p2ab.m
+% Usage: p2ab
 % Output image: sample4-sample5.png, sample4-sample7.png, sample5-sample6.png
-% stitching-rectangle-wxh-512x512.png, cropped-wxh-512x512.png  
+% stitching-rectangle-wxh-512x512.png, cropped-wxh-512x512.png stitch-512x512.raw
 % Parameters: no
 % -------------------------------------------------------------------------------
 % subroutine : stitching.m
@@ -80,17 +92,27 @@
 % @return rc[x5 y5 x6 y6] the intersection rectangle to the glogal coordination
 % @return o1  the intersection rectangle to the r1 coordination
 % @return o2  the intersection rectangle to the r2 coordination
-%###############################################################################%  
-% PROBLEM 3: TEXTURE ANALYSIS   
+%###############################################################################%
+% PROBLEM 2: GEOMETRICAL MODIFICATION
+% Implementation: main program for problem 2a and proble 2b
+% M-file name: p2c.m
+% Usage: p2c
+% Output image: image-warp.png
+% Parameters: no
+% -------------------------------------------------------------------------------
+% subroutine : p2c.m
+% -------------------------------------------------------------------------------
+%###############################################################################%
+% PROBLEM 3: TEXTURE ANALYSIS
 % Implementation: main program for problem 3
-% M-file name: p3.m  
+% M-file name: p3.m
 % Usage: p3
-% Output image: feature-*.png, f-*.png, t-*.png 
+% Output image: feature-*.png, f-*.png, t-*.png
 % Parameters: no
 % -------------------------------------------------------------------------------
 % subroutine : Laws_mask.m
 % -------------------------------------------------------------------------------
-% function [image_out] = Laws_mask(imageG, filter_type, window_size, statistic_type, 
+% function [image_out] = Laws_mask(imageG, filter_type, window_size, statistic_type,
 % normalization_type, show)
 % Laws method texture masks methods
 % @params imageG grey level image

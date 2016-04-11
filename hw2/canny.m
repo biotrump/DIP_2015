@@ -1,9 +1,10 @@
+%Canny Edge Detector
 function [sFinal,thresh] = canny(img, mLow, mHigh, sig)
-% Canny edge detector 
+% Canny edge detector
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function  [sFinal, thresh] =canny(img, mLow, mHigh, sig)
 % Applies the canny edge detection algo to the given image
-%  img  : the given image (matrix) in color or B/W   
+%  img  : the given image (matrix) in B/W
 %  mLow : the threshold is set adaptively: low_threshold = mLow* mean_intensity(im_gradient)
 %  mHigh: the threshol is set adaptively: high_threshold= mHigh*low_threshold
 %  sig  : the value of sigma for the derivative of gaussian operator
@@ -13,16 +14,6 @@ function [sFinal,thresh] = canny(img, mLow, mHigh, sig)
 %  sFinal       : the final (B/W) image with edges
 %  thresh       :  =[lowT, highT] the actual low and high thresholds used
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CS223b HW# 1a: Canny Edge Detector
-% Rohit Singh & Mitul Saha:  {rohitsi, mitul}@stanford.edu
-%
-% Good parameters: 
-%     elephant.jpg :  canny(eim,  1.5, 2.6, 1)
-%     macbeth.jpg  :  canny(mim, .1, 9, 2); recognises 21 of 24 squares
-%     hecface.jpg  :  canny(him, .6, 3, 1); or canny(him, .4,3.5,1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if (nargin < 1)
@@ -35,51 +26,29 @@ elseif (nargin == 3)
   sig = 1;
 end
 
-
-%sig = 1;
-%mLow = 0.5; 
-%mHigh = 2.5;
-
-%img  = imread('macbeth.jpg');
-%img  = imread('elephant.jpg');
-%img  =  imread('hecface.jpg');
-
-origImage = img;
-
-if (ndims(img)==3)
-  img =double(rgb2gray(img));
-end
-
-%smoothen ??
-%G = gauss(sig);
-%img = conv2(img, G'*G,'same');
-
+%smoothen and Find magnitude and orientation of gradient
 %CONVOLUTION WITH DERIVATIVE OF GAUSSIAN
+dG=dgauss(sig); %1D Derivative of Gauss
 
-dG=dgauss(sig);
-
-[dummy, filterLen] = size(dG);
+[dummy, filterLen] = size(dG, 2);
 offset = (filterLen-1)/2;
-
+%
 sy = conv2(double(img), dG ,'same');
 sx = conv2(double(img), dG','same');
 
 [m, n]=size(img);
 
 % crop off the boundary parts...the places where the convolution was partial
-sx = sx(offset+1:m-offset, offset+1:n-offset); 
-sy = sy(offset+1:m-offset, offset+1:n-offset); 
+% gradient along x and y
+sx = sx(offset+1:m-offset, offset+1:n-offset);
+sy = sy(offset+1:m-offset, offset+1:n-offset);
 
 % norm of gradient
 sNorm = sqrt( sx.^2 + sy.^2 );
 
 % direction of gradient
 sAngle = atan2( sy, sx) * (180.0/pi);
-
-% handle divide by zero....
-sx(sx==0) = 1e-10;
-sSlope = abs(sy ./ sx);
-
+sSlope  = abs(sy ./ sx);
 sAorig = sAngle;
 
 %for us, x and x-pi are the same....
@@ -137,7 +106,6 @@ gDiff2 = slp.*(sNorm(indxs)-sNorm(indxs-m-1)) + (1-slp).*(sNorm(indxs)-sNorm(ind
 okIndxs = indxs( gDiff1 >=0 & gDiff2 >= 0);
 sEdgepoints(okIndxs) = 1;
 
-
 %gradient direction: 45-90 i.e. gradDir =2
 gradDir = 2;
 indxs = find(sDiscreteAngles == gradDir);
@@ -154,8 +122,6 @@ gDiff2 =   invSlp.*(sNorm(indxs)-sNorm(indxs-m-1)) + (1-invSlp).*(sNorm(indxs)-s
 okIndxs = indxs( gDiff1 >=0 & gDiff2 >= 0);
 sEdgepoints(okIndxs) = 1;
 
-
-
 %gradient direction: 90-135 i.e. gradDir =3
 gradDir = 3;
 indxs = find(sDiscreteAngles == gradDir);
@@ -171,8 +137,6 @@ gDiff2 =   invSlp.*(sNorm(indxs)-sNorm(indxs-m+1)) + (1-invSlp).*(sNorm(indxs)-s
 
 okIndxs = indxs( gDiff1 >=0 & gDiff2 >= 0);
 sEdgepoints(okIndxs) = 1;
-
-
 
 %gradient direction: 135-180 i.e. gradDir =4
 gradDir = 4;
@@ -199,9 +163,7 @@ sEdgepoints(x)=0;
 x = find(sEdgepoints > 0 & sNorm  >= highT);
 sEdgepoints(x)=1;
 
-%sFinal(sEdgepoints>0)=1;
-
-%at this point, if 
+%at this point, if
 %    sNorm(pixel) > lowT then sEdgepoints(pixel)=0
 %    highT > sNorm(pixel) > lowT then sEdgepoints(pixel)=0.6
 %    sNorm(pixel) > highT then sEdgepoints(pixel)=1
@@ -223,10 +185,7 @@ while (size(oldx,1) ~= size(x,1))
   sEdgepoints(y)=1;
   x = find(sEdgepoints==1);
 end
-		   
+
 x = find(sEdgepoints==1);
 
 sFinal(x)=1;
-
-figure(1);
-imagesc(sFinal); colormap(gray); axis image;
