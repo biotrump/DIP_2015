@@ -151,6 +151,6 @@ fig_name = sprintf('cropped-wxh-%dx%d',w,h);
 print(gcf, '-dpng', fig_name);
 %writing stitching
 fileID = fopen('stitch-512x512.raw','w');
-fwrite(fileID, crop_rect);
+fwrite(fileID, crop_rect');
 fclose(fileID);
 
