@@ -149,30 +149,8 @@ fig_name=sprintf('crop width=%d height=%d', w,h);
 figure('name', fig_name),imshow(crop_rect, 'Border','tight');
 fig_name = sprintf('cropped-wxh-%dx%d',w,h);
 print(gcf, '-dpng', fig_name);
+%writing stitching
+fileID = fopen('stitch-512x512.raw','w');
+fwrite(fileID, crop_rect);
+fclose(fileID);
 
-%
-    if 0,
-    %rotate 5 deg couterclockwise
-    %X = gpuArray(S_HE{4});
-    %Y = imrotate(X, 5, 'loose', 'bilinear');
-    %figure,imshow(Y, 'Border','tight');
-
-        [EM3, BW3] = sobel(S4,threshold,1);
-        figure('name',raw_image),imshowpair(S3, EM3,'montage');
-        fig_name = sprintf('%s : sobel 01 edge map thr=%d',raw_image, threshold);
-        figure('name',fig_name),imshowpair(S3,BW3,'montage');%title(fig_name);
-        fig_name = sprintf('sample3-sobel-01-edgemap-thre-%d',threshold);
-        print(gcf, '-dpng', fig_name);
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %show all results
-        figure('name','sobel Edge Detection');
-        subplot(2,3,1),imshow(S1);
-        subplot(2,3,2),imshow(S2);
-        subplot(2,3,3),imshow(S3);
-        subplot(2,3,4),imshow(BW1);
-        subplot(2,3,5),imshow(BW2);
-        subplot(2,3,6),imshow(BW3);
-        fig_name = sprintf('sobel-edge-detect-thr-%d',threshold);
-        print(gcf, '-dpng', fig_name);
-    end
-%end
