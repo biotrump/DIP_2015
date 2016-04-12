@@ -42,11 +42,13 @@
 % Finds the zero crossings of the 2-dimensional function f
 %###############################################################################%
 % PROBLEM 1: EDGE DETECTION
-% Implementation: main program for problem 1b laplacian and LOG edge detection
+% Implementation: main program for problem 1 canny edge detection
 % M-file name: p1c.m
 % Usage: p1c
-% Output image: laplacian-*, LOG-*
+% Output image:
 % Parameters: no
+% this is a sample code I google from the web. I have not finished it yet, but
+% just some revisions and comments are added.
 % -------------------------------------------------------------------------------
 % subroutine : canny.m
 % -------------------------------------------------------------------------------
@@ -145,3 +147,10 @@
 % -------------------------------------------------------------------------------
 % function output_image = normalize(input_image)
 % normalize the min to max range to 0.0-1.0
+%###############################################################################%
+%APPENDIX
+%p1a : the output iamges for problem 1a.
+%p1b : the output iamges for problem 1b.
+%p1c : the output iamges for problem 1c.
+%p2 : the output iamges for problem 2.
+%p3_png : the output iamges for problem 3.
