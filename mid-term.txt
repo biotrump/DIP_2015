@@ -1,0 +1,32 @@
+1. transfer function, linear, log, exponetnial
+2. histogrm equlization, CDF , bucket filling, the difference 
+3. noise removel, mean, median, gaussian noise, uniform noise, how to remove
+4.  how to detect edge : first order, sobel, 2nd order derivative, zero-crossing,
+homogenous is also zero-crossing,
+canny edge detection :
+1. noise removel
+2. non-maximalsuppression
+
+warping: translation, scaling, rotation
+[z,y] => [x, y, 1] to help LA calculation, 
+
+morph , dilation, erosion, open ,close
+thinining, skeleton, 
+
+half-tone : patterning, con, pro, how?
+dither matrix, order, why?
+threshold matrix ??
+error diffusion, how?, cycle , flip
+triangle, pyramid, multi-scale error diffusion, con, pros, why?
+
+texture analysis:
+laws by supervised or unsupervised, single texture or multi-textures.
+
+OCR : attribute, euler number, hole, connected components, connectivity
+4,8 connectivity
+
+
+sampling, and transform, nyquist , why?
+alias, overlapping
+why transform, dct, fourier, hough transform,
+dct keep spatial , basis functions.
