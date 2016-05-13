@@ -1,5 +1,6 @@
 %http://stackoverflow.com/questions/29315365/2d-discrete-fourier-transform-implementation-in-matlab
-function res=myDFT(signal)
+% signal is a matrix of MxN size
+function res=DFT2D(signal)
     signal=double(signal);
 
     l=size(signal,1);
