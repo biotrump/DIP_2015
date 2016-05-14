@@ -16,45 +16,36 @@ function p1(row, col, raw_image)
     S=reshape(I,row,col);
     S1=S;
     S1=S1';%image is in row-major, but matlab uses col0-major
+    figure;
+    subplot(2,2,1);imshow(S1);title(strcat('I:',raw_image));
+    colorbar;
     
     %centering before DFT
-    S1_centered=int16(S1);
-    for i=1:row,
-        for j=1:col,
-            if mod((i+j), 2) ~=0,
-                S1_centered(i,j)=-S1_centered(i,j);
-            end
-         end
-    end   
+    S1_centered=dft_centering(S1);
+    subplot(2,2,2);imshow(uint8(S1_centered));title('centering I');
+    colorbar;
 
-    figure;
-    imshow(S1);title(raw_image);
-
-    figure('name','DFT2D');
+    %DFT2D
     dft2d=DFT2D(S1_centered);
-    %
     dft2d_I = log(abs(dft2d));
-    imshow(dft2d_I,[0 20],'InitialMagnification','fit');title('DFT2D');
-    %colormap(jet); colorbar;
+    subplot(2,2,3); imshow(dft2d_I,[0 20],'InitialMagnification','fit');title('D: DFT2D');
+    %colormap(jet); 
+    colorbar;
+    %imwrite(dft2d_I, 'D.png');
 
     %IDFT2D: only real part is valid in iDFT
     iS1=int16(real(IDFT2D(dft2d)));%result is centered image
-
     %reverse centering for iDFT
-    for i=1:row,
-        for j=1:col,
-            if mod((i+j), 2) ~=0,
-                iS1(i,j)=-iS1(i,j);
-            end
-         end
-    end
+    iS1=dft_centering(iS1);
     iS1=uint8(iS1);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    figure('name','inverse DFT2D');
-    imshow(iS1);title('IDFT2D');
+    %figure('name','inverse DFT2D');
+    subplot(2,2,4); imshow(iS1);title('IDFT2D');colorbar;
     %check error between original and inverse
-    norm(single(iS1-S1_centered))
+    fprintf('error between original and inverse DFT: %f\n',norm(single(iS1-S1)));
+    
+    figure('name','Problem 3a');imshow(dft2d_I,[0 20],'InitialMagnification','fit');title('D');
     
     %matlab verification
     %fft2_out=fft2(S);
@@ -62,5 +53,35 @@ function p1(row, col, raw_image)
     %figure;imshow(S);
     %figure;imshow(rS);title('ifft2');
     %norm(single(rS-S))
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %p3b : ideal low pass filter
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %D0=5
+    lpD5=ideal_lp(dft2d, 5);
+    lpD5_I = log(abs(lpD5));
+    figure('name','P3(b)');
+    subplot(2,2,1); imshow(lpD5_I,[0 20],'InitialMagnification','fit');title('L5');
+    colorbar;
     
+    %D0=30
+    lpD30=ideal_lp(dft2d, 30);
+    lpD30_I = log(abs(lpD30));
+    subplot(2,2,2); imshow(lpD30_I,[0 20],'InitialMagnification','fit');title('L30');
+    colorbar;
+    
+    %IDFT2D: only real part is valid in iDFT
+    ilpD5=int16(real(IDFT2D(lpD5)));%result is centered image
+    %reverse centering for iDFT
+    ilpD5=dft_centering(ilpD5);
+    ilpD5=uint8(ilpD5);
+    subplot(2,2,3);imshow(ilpD5);title('inverse L5');
+    colorbar;
+    
+    %IDFT2D: only real part is valid in iDFT
+    ilpD30=int16(real(IDFT2D(lpD30)));%result is centered image
+    %reverse centering for iDFT
+    ilpD30=dft_centering(ilpD30);
+    ilpD30=uint8(ilpD30);
+    subplot(2,2,4);imshow(ilpD30);title('inverse L30');%rining effect
+    colorbar;
 end
