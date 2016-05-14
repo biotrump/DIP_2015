@@ -53,6 +53,7 @@ function p1(row, col, raw_image)
     %figure;imshow(S);
     %figure;imshow(rS);title('ifft2');
     %norm(single(rS-S))
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %p3b : ideal low pass filter
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,5 +84,37 @@ function p1(row, col, raw_image)
     ilpD30=dft_centering(ilpD30);
     ilpD30=uint8(ilpD30);
     subplot(2,2,4);imshow(ilpD30);title('inverse L30');%rining effect
+    colorbar;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %p3c : Gaussian low pass filter
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %D0=5
+    glpD5=glp(dft2d, 5);
+    glpD5_I = log(abs(glpD5));
+    figure('name','P3(c)');
+    subplot(2,2,1); imshow(glpD5_I,[0 20],'InitialMagnification','fit');title('G5');
+    colorbar;
+    
+    %D0=30
+    glpD30=glp(dft2d, 30);
+    glpD30_I = log(abs(glpD30));
+    subplot(2,2,2); imshow(glpD30_I,[0 20],'InitialMagnification','fit');title('G30');
+    colorbar;
+    
+    %IDFT2D: only real part is valid in iDFT
+    iglpD5=int16(real(IDFT2D(glpD5)));%result is centered image
+    %reverse centering for iDFT
+    iglpD5=dft_centering(iglpD5);
+    iglpD5=uint8(iglpD5);
+    subplot(2,2,3);imshow(iglpD5);title('inverse G5');
+    colorbar;
+    
+    %IDFT2D: only real part is valid in iDFT
+    iglpD30=int16(real(IDFT2D(glpD30)));%result is centered image
+    %reverse centering for iDFT
+    iglpD30=dft_centering(iglpD30);
+    iglpD30=uint8(iglpD30);
+    subplot(2,2,4);imshow(iglpD30);title('inverse G30');%rining effect
     colorbar;
 end
