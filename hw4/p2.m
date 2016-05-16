@@ -18,18 +18,6 @@ function p1(row, col, raw_image)
     figure;
     imshow(S1);title(raw_image);
 
-    %h = histogram(S1,256, 'BinMethod','sturges');
-    figure;
-    h = histogram(S1,256);
-    %h.NumBins
-    %bin counts
-    h.Values
-    %otsu threshold
-    S1(S1 <236 )=0;
-    %S1(S1 <= 4)=0;
-    figure;
-    imshow(S1);title('binary threshold');
-
     %k=figure,imshow(S1);
     %corners1 = detectFASTFeatures(S1);
     %figure,imshow(S1); hold on;
@@ -41,31 +29,27 @@ function p1(row, col, raw_image)
     figure('name','thining');
     thinning = bwmorph(S1,'thin',Inf);
     imshow(thinning);title('thinning Image');
-    
+
     %boundary extract
-    s=strel('disk',4,0);%Structuring element
-    F=imerode(S1,s);%Erode the image by structuring element
+    se=strel('disk',4,0);%Structuring element
+    %F=imerode(S1,se);%Erode the image by structuring element
+    F=bmorph('erode', S1, se.getnhood, 5, 5);
     %Difference between binary image and Eroded image
     Boundary=S1-F;
     figure('name','morphology'),imshow(Boundary);title('Boundary extracted Image');
 
-    %ball erode
-    %se = offsetstrel('ball',10,10);
-    %erodedI = imerode(S1,se);
-    %figure('name','ball erode');
-    %imshow(erodedI);
-    
     %ball opening
     %se = strel('disk',10);
     se = offsetstrel('ball',10,10);
     afterOpening = imopen(S1,se);
     figure('name','ball opening');
     imshow(afterOpening);title('ball opening Image');
-    
+
+	%show all results
     figure('name','Problem 2: morphological Processing');
     subplot(2,3,2);imshow(S1);title('Sample2.raw');
     subplot(2,3,4);imshow(thinning);title('thinning');
     subplot(2,3,5);imshow(Boundary);title('boundary extract');
     subplot(2,3,6);imshow(afterOpening);title('ball opening');
-    
+
 end

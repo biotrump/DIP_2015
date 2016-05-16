@@ -95,7 +95,7 @@ function temp=berode(inimg, se, origRow, origCol)
           for n=1:ncse
             if ((i-origRow+m) >= 1 && (j-origCol+n) >=1 &&...
                 (i-origRow+m) <= nr && (j-origCol+n) <= nc)
-              count = count + inimg(i-origRow+m,j-origCol+n) && se(m,n);
+              count = count + uint8(inimg(i-origRow+m,j-origCol+n) && se(m,n));
             end
           end
         end
