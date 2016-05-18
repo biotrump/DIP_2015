@@ -34,6 +34,7 @@ function p1(row, col, raw_image)
     Boundary=S1-F;
     figure('name','morphology'),imshow(Boundary);title('Boundary extracted Image');
 
+	%opening
     se=strel('disk',7,0);%Structuring element
     %F=imerode(S1,se);%Erode the image by structuring element
     eS1=bmorph('erode', S1, se.getnhood, 8, 8);
