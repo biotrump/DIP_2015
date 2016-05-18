@@ -74,6 +74,7 @@ void cvThin( IplImage* src, IplImage* dst, int iterations=1)
    }
   }
   cvReleaseImage(&t_image);
+
   t_image = cvCloneImage(dst);
   for(i=0; i<size.height;  i++)
   {
