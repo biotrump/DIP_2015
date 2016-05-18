@@ -18,10 +18,6 @@ function p1(row, col, raw_image)
     figure;
     imshow(S1);title(raw_image);
 
-    %k=figure,imshow(S1);
-    %corners1 = detectFASTFeatures(S1);
-    %figure,imshow(S1); hold on;
-    %plot(corners1.selectStrongest(50));
     figure('name','skeleton');
     skeleton = bwmorph(S1,'skel',Inf);
     imshow(skeleton);title('skelenton Image');
@@ -38,18 +34,29 @@ function p1(row, col, raw_image)
     Boundary=S1-F;
     figure('name','morphology'),imshow(Boundary);title('Boundary extracted Image');
 
-    %ball opening
+    se=strel('disk',7,0);%Structuring element
+    %F=imerode(S1,se);%Erode the image by structuring element
+    eS1=bmorph('erode', S1, se.getnhood, 8, 8);
+    figure('name','eS1'),imshow(eS1);title('ed eS1');
+
+    se=strel('disk',6,0);%Structuring element
+    oS1=bmorph('dilate', eS1, se.getnhood, 6, 6);
+    figure('name','opening'),imshow(oS1);title('disk opening');
+    afterOpening = oS1;
+if 0
+    %matlab ball opening
     %se = strel('disk',10);
     se = offsetstrel('ball',10,10);
     afterOpening = imopen(S1,se);
     figure('name','ball opening');
     imshow(afterOpening);title('ball opening Image');
+end
 
 	%show all results
     figure('name','Problem 2: morphological Processing');
     subplot(2,3,2);imshow(S1);title('Sample2.raw');
     subplot(2,3,4);imshow(thinning);title('thinning');
     subplot(2,3,5);imshow(Boundary);title('boundary extract');
-    subplot(2,3,6);imshow(afterOpening);title('ball opening');
+    subplot(2,3,6);imshow(afterOpening);title('disk opening');
 
 end
