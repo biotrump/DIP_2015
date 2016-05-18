@@ -26,6 +26,9 @@ function p1()
     SBW = ~SBW;
     figure('name','ostu threshold');
     imshow(SBW);title('Binary Sample1.raw');
+    SBW=logical(median(SBW));
+    figure('name','median filter');
+    imshow(SBW);title('median Sample1.raw');
 
     se=strel('disk',1,0);%Structuring element
     eSBW=bmorph('erode', SBW, se.getnhood, 2, 2);
@@ -55,55 +58,25 @@ function p1()
     TBW = ~TBW;
     imshow(TBW);title('binary TrainingSet.raw');
 
-    %h = histogram(S1,256, 'BinMethod','sturges');
-    figure;
-    %h = histogram(S1,256);
-    h = histogram(S1,256);
-    %h.NumBins
-    %bin counts
-    h.Values
-    %otsu threshold
-    S1(S1 <236 )=0;
-    %S1(S1 <= 4)=0;
-    figure;
-    imshow(S1);title('binary threshold');
+    %
+    figure('name','skeleton Sample1.raw');
+    skeleton = bwmorph(SBW,'skel',Inf);
+    imshow(skeleton);title('skelenton sample1.raw');
 
-    %k=figure,imshow(S1);
-    %corners1 = detectFASTFeatures(S1);
-    %figure,imshow(S1); hold on;
-    %plot(corners1.selectStrongest(50));
-    figure('name','skeleton');
-    skeleton = bwmorph(S1,'skel',Inf);
-    imshow(skeleton);title('skelenton Image');
-
-    figure('name','thining');
-    thinning = bwmorph(S1,'thin',Inf);
+    figure('name','thining Sample1.raw');
+    thinning = bwmorph(SBW,'thin',Inf);
     imshow(thinning);title('thinning Image');
-    
-    %boundary extract
-    s=strel('disk',4,0);%Structuring element
-    F=imerode(S1,s);%Erode the image by structuring element
-    %Difference between binary image and Eroded image
-    Boundary=S1-F;
-    figure('name','morphology'),imshow(Boundary);title('Boundary extracted Image');
+    %
+    figure('name','skeleton Train.raw');
+    tskeleton = bwmorph(TBW,'skel',Inf);
+    imshow(tskeleton);title('skelenton sample1.raw');
 
-    %ball erode
-    %se = offsetstrel('ball',10,10);
-    %erodedI = imerode(S1,se);
-    %figure('name','ball erode');
-    %imshow(erodedI);
-    
-    %ball opening
-    %se = strel('disk',10);
-    se = offsetstrel('ball',10,10);
-    afterOpening = imopen(S1,se);
-    figure('name','ball opening');
-    imshow(afterOpening);title('ball opening Image');
-    
+    figure('name','thining train.raw');
+    tthinning = bwmorph(TBW,'thin',Inf);
+    imshow(tthinning);title('thinning Image');
+
     figure('name','Problem 2: morphological Processing');
     subplot(2,3,2);imshow(S1);title('Sample2.raw');
     subplot(2,3,4);imshow(thinning);title('thinning');
-    subplot(2,3,5);imshow(Boundary);title('boundary extract');
-    subplot(2,3,6);imshow(afterOpening);title('ball opening');
-    
+
 end
