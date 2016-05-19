@@ -1,7 +1,7 @@
 % Wr : bounding width ratio (w)/(w+h)
 % Hr : bounding height ratio (h)/(w+h)
 % Euler number : E = H-C
-function [A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr]=get_feature(roi,method)
+function [A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr, C0]=get_feature(roi,method)
     roi=logical(roi);
     [r,w]=size(roi);
     if (strcmp(method,'GRAY'))
@@ -25,7 +25,7 @@ function [A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr]=get_feature(roi,method)
         Aa4=0;
         Pa4=0;
     end
-        
+
     if E8 ~=0,
         Aa8 = A0/E8;
         Pa8 = P/E8;
@@ -39,7 +39,7 @@ function [A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr]=get_feature(roi,method)
     %Average length
     La=Pa/2;
     %Average width
-    Wa=2*Aa./Pa;
+    Wa=2*A0/P;
 end
 
 %Bit Quad match
@@ -131,7 +131,7 @@ function [A P E4 E8]=BidQuad_Gary(image)
     %P=(n{Q1}+n{Q2}+n{Q3}+2n{Qd});
     P=nQ1(image) + nQ2(image) + nQ3(image) + 2 * nQd(image);
 
-    %Euler number, four connected 
+    %Euler number, four connected
     n1=nQ1(image);
     n3=nQ3(image);
     nd=nQd(image);
@@ -145,9 +145,9 @@ function [A P E4 E8]=BidQuad_Duda(image)
     A=nQ1(image)/4 + nQ2(image)/2 + 7 * nQ3(image)/8 + 3 * nQd(image)/4;
     %P=n{Q2}+(n{Q1}+n{Q3}+2n{Qd})/sqrt(2);
     P=nQ2(image) + (nQ1(image) + nQ3(image) + 2 * nQd(image))/sqrt(2);
-    
+
     %actuall this is GRAY
-    %Euler number, four connected 
+    %Euler number, four connected
     E4= (nQ1(image) - nQ3(image) + 2 * nQd(image))/4;
     %Euler number, eight connected
     E8= (nQ1(image) - nQ3(image) - 2 * nQd(image))/4;

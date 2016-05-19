@@ -16,6 +16,7 @@ function p1()
     T1=T1';%image is in row-major, but matlab uses col0-major
     figure;
     imshow(T1);title(train_image);
+
     if 1,
         Tlevel=142; %binary thredshold, the value is from ostu threshold!
         TBW=T1;
@@ -31,15 +32,22 @@ function p1()
     TBW=logical(median(TBW));   %median filter to remove impulse noise
     imshow(TBW);title('binary TrainingSet.raw');
 
+    %se=strel('disk',1,0);%Structuring element
+    %TBW=bmorph('dilate', TBW, se.getnhood, 2, 2);
+
     %bounding box:y0,y1,x0,x1
-	bb=bbox(TBW);   %bounding box for all characters/alphabet
+	tbb=bbox(TBW);   %bounding box for all characters/alphabet
+
     %
     %figure('name','skeleton Train.raw');
     tskeleton = bwmorph(TBW,'skel',Inf);
     %imshow(tskeleton);title('skelenton train.raw');
     tbbs=tskeleton;
-	for i=1:size(bb,1)
-        y0=bb(i,1),y1=bb(i,2),x0=bb(i,3),x1=bb(i,4);
+	for i=1:size(tbb,1)
+        y0=tbb(i,1);
+        y1=tbb(i,2);
+        x0=tbb(i,3);
+        x1=tbb(i,4);
 		tbbs(y0,x0:x1)=1;
         tbbs(y1,x0:x1)=1;
         tbbs(y0:y1,x0)=1;
@@ -47,21 +55,46 @@ function p1()
     end
     figure('name','skeleton Train.raw');
 	imshow(tbbs);title('bounding skeleton TrainingSet.raw');
-    
+
     %figure('name','thining train.raw');
     tthinning = bwmorph(TBW,'thin',Inf);
     %imshow(tthinning);title('thinning Image');
     tbbt=tthinning;
-	for i=1:size(bb,1)
-        y0=bb(i,1),y1=bb(i,2),x0=bb(i,3),x1=bb(i,4);
-		tbbt(y0,x0:x1)=1;
-        tbbt(y1,x0:x1)=1;
-        tbbt(y0:y1,x0)=1;
-        tbbt(y0:y1,x1)=1;
+    %ttfi=1;
+	for i=1:size(tbb,1)
+        y0=tbb(i,1);
+        y1=tbb(i,2);
+        x0=tbb(i,3);
+        x1=tbb(i,4);
+
+		%fine tune bounding box
+		roi = tthinning(y0:y1,x0:x1);
+        new_bb=bbox(roi);
+        ny0=new_bb(1,1);
+        ny1=new_bb(1,2);
+        nx0=new_bb(1,3);
+        nx1=new_bb(1,4);
+        yy0=y0+ny0-1;
+        xx0=x0+nx0-1;
+        yy1=y0+ny1-1;
+        xx1=x0+nx1-1;
+        tbb(i,1)=yy0;%-1;
+        tbb(i,2)=yy1;%+1;
+        tbb(i,3)=xx0;%-1;
+        tbb(i,4)=xx1;%+1;
+		%mark the bounding box
+        tbbt(yy0,xx0:xx1)=1;
+        tbbt(yy1,xx0:xx1)=1;
+        tbbt(yy0:yy1,xx0)=1;
+        tbbt(yy0:yy1,xx1)=1;
+
+        %[A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr]=get_feature(roi,'GRAY');
+        %tthin_feature(ttfi,:)=[A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr];
+        %ttfi=ttfi+1;
     end
     figure('name','bounding thinning TrainingSet.raw');
     imshow(tbbt);title('bounding thinning TrainingSet.raw');
-    
+
     %read sample1.raw
     row=256;  col=256;
     sample_image='Sample1.raw';
@@ -72,6 +105,7 @@ function p1()
     S1=S1';%image is in row-major, but matlab uses col0-major
     figure;
     imshow(S1);title(sample_image);
+
     if 1,
         level=111;  %binary threshold by ostu threshold
         SBW=S1;
@@ -85,15 +119,18 @@ function p1()
     SBW = ~SBW; %foreground is "1"
     figure('name','ostu threshold');
     imshow(SBW);title('Binary Sample1.raw');
+
     SBW=logical(median(SBW));   %median filter to remove pepper and salt noise
     fSBW=figure('name','median filter');
     imshow(SBW);title('median Sample1.raw');
     imwrite(SBW, 'bsample1.jpg');
+
     gtruth_tbl=test_set(SBW);   %bounding box :x0,y0,x1,y1
-    
+
 %    set(fSBW,'WindowButtonDownFcn',@mouseClickcallback)
-%    se=strel('disk',1,0);%Structuring element
-%    eSBW=bmorph('erode', SBW, se.getnhood, 2, 2);
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    se=strel('disk',3,0);%Structuring element
+    SBW=bmorph('dilate', SBW, se.getnhood, 4, 4);
 %    figure('name','erode binary');
 %    imshow(eSBW);title('erode Binary Sample1.raw');
 
@@ -109,8 +146,12 @@ function p1()
     figure('name','thining bounding box');
     GTBW=thinning;
     tbw=thinning;
+    %stfi=1;
 	for i=1:size(gtruth_tbl,1)
-        x0=gtruth_tbl(i,1),y0=gtruth_tbl(i,2),x1=gtruth_tbl(i,3),y1=gtruth_tbl(i,4);
+        x0=gtruth_tbl(i,1);
+        y0=gtruth_tbl(i,2);
+        x1=gtruth_tbl(i,3);
+        y1=gtruth_tbl(i,4);
         %coarse bounding box
         tbw(y0,x0:x1)=1;
         tbw(y1,x0:x1)=1;
@@ -120,7 +161,10 @@ function p1()
         %fine tune bounding box
         roi = GTBW(y0:y1,x0:x1);
         new_bb=bbox(roi);
-        ny0=new_bb(1,1), ny1=new_bb(1,2), nx0=new_bb(1,3), nx1=new_bb(1,4);
+        ny0=new_bb(1,1);
+        ny1=new_bb(1,2);
+        nx0=new_bb(1,3);
+        nx1=new_bb(1,4);
         yy0=y0+ny0-1;
         xx0=x0+nx0-1;
         yy1=y0+ny1-1;
@@ -132,9 +176,11 @@ function p1()
         gtruth_tbl(i,1)=xx0;
         gtruth_tbl(i,2)=yy0;
         gtruth_tbl(i,3)=xx1;
-        gtruth_tbl(i,4)=yy1;
-        roi = thinning(yy0:yy1,xx0:xx1);
-        [A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr]=get_feature(roi,'GRAY');
+        gtruth_tbl(i,4)=yy1+1;
+        %roi = thinning(yy0:yy1,xx0:xx1);
+        %[A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr]=get_feature(roi,'GRAY');
+        %sthin_feature(stfi,:)=[A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr];
+        %stfi=stfi+1;
     end
     subplot(1,2,1);imshow(tbw);title('coarse bounding box');
 	subplot(1,2,2);imshow(GTBW);title('fined bounding box');
@@ -142,6 +188,12 @@ function p1()
     %figure('name','Problem 2: morphological Processing');
     %subplot(2,3,2);imshow(S1);title('Sample2.raw');
     %subplot(2,3,4);imshow(thinning);title('thinning');
+
+	%find the matched alphabet by feature distance
+	%bounding tbb:y0,y1,x0,x1
+	%gtruth_tbl : x0 y0 x1 y1
+	minDist1(tthinning, tbb, thinning, gtruth_tbl);
+	%minDist1(tthinning, tbb, thinning, gtruth_tbl);
 
 end
 

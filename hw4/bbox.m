@@ -21,7 +21,7 @@ function bl=bbox(imgsrc)
             maxY= i;
             maxFound=1;
         end
-        
+
 		if (minFound && maxFound),
             bX=findX(imgsrc(minY:maxY,:), width, minY, maxY);
             for j=1:size(bX,1)
@@ -32,11 +32,11 @@ function bl=bbox(imgsrc)
             maxFound=0;
 		end
     end
-    bl
+    %bl
 end
 function bX=findX(strip, width, minY, maxY)
-	minX=0;
-	maxX=0;
+	minX=1;
+	maxX=1;
 	l=1;
     minFound=0;
     maxFound=0;
@@ -51,7 +51,7 @@ function bX=findX(strip, width, minY, maxY)
 			maxX= i-1;
             maxFound=1;
         end
-        
+
 		if (minFound && maxFound),
 			bX(l,:)=[minX maxX];
 			l=l+1;
@@ -59,5 +59,5 @@ function bX=findX(strip, width, minY, maxY)
             maxFound=0;
 		end
     end
-    bX
+    %bX
 end
