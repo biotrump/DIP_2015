@@ -4,6 +4,39 @@ function p1()
     %Sample2.raw : 256x256
     %Sample3.raw : 256x256
     %TrainingSet.raw : 450 x 248
+
+    trow=450;  tcol=248;
+    train_image='TrainingSet.raw';
+    fin=fopen(train_image,'r');
+    Tr=fread(fin,trow*tcol,'uint8=>uint8');
+    fclose(fin);
+    T1=reshape(Tr,trow,tcol);
+    T1=T1';%image is in row-major, but matlab uses col0-major
+    figure;
+    imshow(T1);title(train_image);
+    if 1,
+        Tlevel=142;
+        TBW=T1;
+        TBW(T1 < 142 )=0;
+        TBW(T1 >= 142 )=1;
+    else
+        Tlevel = graythresh(T1);
+        TBW = im2bw(T1,Tlevel);
+    end
+    fprintf('TrainingSet.raw:ostu level:%d\n', Tlevel*255);
+    figure('name','ostu threshold Train');
+    TBW = ~TBW;
+    TBW=logical(median(TBW));
+    imshow(TBW);title('binary TrainingSet.raw');
+	l=bbox(TBW);
+
+	for i=1:size(l,1)
+		TBW(l(i,1),:)=1;
+		TBW(l(i,2),:)=1;
+	end
+	imshow(TBW);title('bounding TrainingSet.raw');
+	return;
+
     row=256;  col=256;
     sample_image='Sample1.raw';
     fin=fopen(sample_image,'r');
@@ -35,28 +68,6 @@ function p1()
     figure('name','erode binary');
     imshow(eSBW);title('erode Binary Sample1.raw');
 
-    trow=450;  tcol=248;
-    train_image='TrainingSet.raw';
-    fin=fopen(train_image,'r');
-    Tr=fread(fin,trow*tcol,'uint8=>uint8');
-    fclose(fin);
-    T1=reshape(Tr,trow,tcol);
-    T1=T1';%image is in row-major, but matlab uses col0-major
-    figure;
-    imshow(T1);title(train_image);
-    if 1,
-        Tlevel=142;
-        TBW=T1;
-        TBW(T1 < 142 )=0;
-        TBW(T1 >= 142 )=1;
-    else
-        Tlevel = graythresh(T1);
-        TBW = im2bw(T1,Tlevel);
-    end
-    fprintf('TrainingSet.raw:ostu level:%d\n', Tlevel*255);
-    figure('name','ostu threshold Train');
-    TBW = ~TBW;
-    imshow(TBW);title('binary TrainingSet.raw');
 
     %
     figure('name','skeleton Sample1.raw');
