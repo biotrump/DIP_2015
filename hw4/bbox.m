@@ -1,3 +1,4 @@
+% @return bl = y0 y1 x0 x1; list to the bounding box
 function bl=bbox(imgsrc)
 	[height, width]=size(imgsrc);
 	minY=0;
@@ -5,6 +6,7 @@ function bl=bbox(imgsrc)
 	l=1;
     minFound=0;
     maxFound=0;
+    bl=[];
 	for i=1:height
 		data=imgsrc(i,:);%get row i
 		val= sum(data);
@@ -12,8 +14,11 @@ function bl=bbox(imgsrc)
 			minY=i;
             minFound=1;
         end
-        if (minFound && val == 0),
+        if (minFound && val == 0 ) ,
 			maxY= i-1;
+            maxFound=1;
+        elseif (minFound && i == height ),
+            maxY= i;
             maxFound=1;
         end
         

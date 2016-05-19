@@ -1,3 +1,5 @@
+%setup the bounding box for the test image
+%manually select the coarse boundinb box and the fine tune
 function gtruth_tbl=test_set(image)
 %x0,y0,x1,y1
 bbox=[8,8, 45,46 'x';...
