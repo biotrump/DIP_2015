@@ -1,5 +1,6 @@
 function p1()
     close all;
+    clear;
     %Sample1.raw : 256x256
     %Sample2.raw : 256x256
     %Sample3.raw : 256x256
@@ -22,21 +23,26 @@ function p1()
     else
         Tlevel = graythresh(T1);
         TBW = im2bw(T1,Tlevel);
+        fprintf('TrainingSet.raw:ostu level:%d\n', Tlevel*255);
     end
-    fprintf('TrainingSet.raw:ostu level:%d\n', Tlevel*255);
     figure('name','ostu threshold Train');
     TBW = ~TBW;
     TBW=logical(median(TBW));
     imshow(TBW);title('binary TrainingSet.raw');
-	l=bbox(TBW);
-
-	for i=1:size(l,1)
-		TBW(l(i,1),:)=1;
-		TBW(l(i,2),:)=1;
+    
+    %bounding box:y0,y1,x0,x1
+	bb=bbox(TBW);
+    BBW=TBW;
+	for i=1:size(bb,1)
+        y0=bb(i,1),y1=bb(i,2),x0=bb(i,3),x1=bb(i,4);
+		BBW(y0,x0:x1)=1;
+        BBW(y1,x0:x1)=1;
+        BBW(y0:y1,x0)=1;
+        BBW(y0:y1,x1)=1;
 	end
-	imshow(TBW);title('bounding TrainingSet.raw');
-	return;
+	imshow(BBW);title('bounding TrainingSet.raw');
 
+    %read sample1.raw
     row=256;  col=256;
     sample_image='Sample1.raw';
     fin=fopen(sample_image,'r');
@@ -54,20 +60,22 @@ function p1()
     else
         level = graythresh(S1);
         SBW = im2bw(S1,level);
+        fprintf('Sample1.raw:ostu level:%d\n', level*255);
     end
-    fprintf('Sample1.raw:ostu level:%d\n', level*255);
     SBW = ~SBW;
     figure('name','ostu threshold');
     imshow(SBW);title('Binary Sample1.raw');
     SBW=logical(median(SBW));
-    figure('name','median filter');
+    fSBW=figure('name','median filter');
     imshow(SBW);title('median Sample1.raw');
-
+    imwrite(SBW, 'bsample1.jpg');
+    gtruth_tbl=test_set(SBW);%x0,y0,x1,y1
+    
+%    set(fSBW,'WindowButtonDownFcn',@mouseClickcallback)
     se=strel('disk',1,0);%Structuring element
     eSBW=bmorph('erode', SBW, se.getnhood, 2, 2);
     figure('name','erode binary');
     imshow(eSBW);title('erode Binary Sample1.raw');
-
 
     %
     figure('name','skeleton Sample1.raw');
@@ -77,6 +85,18 @@ function p1()
     figure('name','thining Sample1.raw');
     thinning = bwmorph(SBW,'thin',Inf);
     imshow(thinning);title('thinning Image');
+    
+    GTBW=thinning;
+	for i=1:size(gtruth_tbl,1)
+        x0=gtruth_tbl(i,1),y0=gtruth_tbl(i,2),x1=gtruth_tbl(i,3),y1=gtruth_tbl(i,4);
+        %roi = GTBW(y0:y1,x0:x1);
+        %fine_bb=bbox(roi);
+        GTBW(y0,x0:x1)=1;
+        GTBW(y1,x0:x1)=1;
+        GTBW(y0:y1,x0)=1;
+        GTBW(y0:y1,x1)=1;
+	end
+	imshow(GTBW);title('bounding Sample1.raw');
     %
     figure('name','skeleton Train.raw');
     tskeleton = bwmorph(TBW,'skel',Inf);
@@ -90,4 +110,16 @@ function p1()
     subplot(2,3,2);imshow(S1);title('Sample2.raw');
     subplot(2,3,4);imshow(thinning);title('thinning');
 
+end
+
+function mouseClickcallback(hObject,~)
+    persistent  i;
+    if isempty(i)
+        i=1;
+    end
+    pos=get(hObject,'CurrentPoint');
+    %disp([i,' X:',num2str(pos(1)),', Y:',num2str(pos(2))]);
+    fprintf('%d:X=%d, Y=%d \n',i, num2str(pos(1)), num2str(pos(2)));
+    bb_list(i,:)=[num2str(pos(2)) num2str(pos(1))];
+    i=i+1;
 end

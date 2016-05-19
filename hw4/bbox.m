@@ -1,7 +1,7 @@
 function bl=bbox(imgsrc)
 	[height, width]=size(imgsrc);
-	minY=-1;
-	maxY=-2;
+	minY=0;
+	maxY=0;
 	l=1;
     minFound=0;
     maxFound=0;
@@ -18,12 +18,41 @@ function bl=bbox(imgsrc)
         end
         
 		if (minFound && maxFound),
-			bl(l,:)=[minY maxY];
-			l=l+1;
-            minY=maxY+1;
+            bX=findX(imgsrc(minY:maxY,:), width, minY, maxY);
+            for j=1:size(bX,1)
+                bl(l,:)=[minY maxY bX(j,:)];
+                l=l+1;
+            end
             minFound=0;
             maxFound=0;
 		end
     end
     bl
+end
+function bX=findX(strip, width, minY, maxY)
+	minX=0;
+	maxX=0;
+	l=1;
+    minFound=0;
+    maxFound=0;
+	for i=1:width
+		data=strip(:,i);%get row i
+		val= sum(data);
+		if (~minFound && val ~=0),
+			minX=i;
+            minFound=1;
+        end
+        if (minFound && val == 0),
+			maxX= i-1;
+            maxFound=1;
+        end
+        
+		if (minFound && maxFound),
+			bX(l,:)=[minX maxX];
+			l=l+1;
+            minFound=0;
+            maxFound=0;
+		end
+    end
+    bX
 end
