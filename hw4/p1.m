@@ -31,10 +31,16 @@ function p1()
     TBW = ~TBW;%foreground is 1
     TBW=logical(median(TBW));   %median filter to remove impulse noise
     imshow(TBW);title('binary TrainingSet.raw');
-
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % to close the spur edge by opening
+    if 0
+    se=strel('disk',1,0);%Structuring element
+    TBW=bmorph('dilate', TBW, se.getnhood, 2, 2);
+    se=strel('disk',1,0);%Structuring element
+    TBW=bmorph('erode', TBW, se.getnhood, 2, 2);
     %se=strel('disk',1,0);%Structuring element
     %TBW=bmorph('dilate', TBW, se.getnhood, 2, 2);
-
+    end
     %bounding box:y0,y1,x0,x1
 	tbb=bbox(TBW);   %bounding box for all characters/alphabet
 
@@ -129,8 +135,11 @@ function p1()
 
 %    set(fSBW,'WindowButtonDownFcn',@mouseClickcallback)
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % to close the spur edge by opening
     se=strel('disk',3,0);%Structuring element
     SBW=bmorph('dilate', SBW, se.getnhood, 4, 4);
+    se=strel('disk',1,0);%Structuring element
+    SBW=bmorph('erode', SBW, se.getnhood, 2, 2);
 %    figure('name','erode binary');
 %    imshow(eSBW);title('erode Binary Sample1.raw');
 
