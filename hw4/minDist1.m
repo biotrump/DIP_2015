@@ -7,7 +7,7 @@ function minDist1(train, tbb, sample, sbb)
 	ntbb=size(tbb,1);%y0 y1 x0 x1
 
 	for i=1:nsbb
-		min=inf;
+		min_val=inf;
 		mI=0;
 		sx0 = sbb(i,1);
 		sy0 = sbb(i,2);
@@ -25,9 +25,9 @@ function minDist1(train, tbb, sample, sbb)
 		    [tA0, tAa, tP, tPa, tE4, tE8, tLa, tWa, tWr, tHr,tC0]=get_feature(roi_t,'GRAY');
 			temp=(sE4-tE4)^2 +(sE8-tE8)^2+(sLa(1)-tLa(1))^2+(sLa(2)-tLa(2))^2+...
 				(sWa-tWa)^2 + (sWr-tWr)^2 + (sHr-tHr)^2 + (sC0-tC0)^2;
-			if(temp < min)
+			if(temp < min_val)
 				mI=j;
-				min=temp;
+				min_val=temp;
 			end
 		end
 		for j=52:61
@@ -40,9 +40,9 @@ function minDist1(train, tbb, sample, sbb)
 			temp=(sC0-tC0)^2 + (sE4-tE4)^2;
 			%(sAa(1)-tAa(1))^2  + (sE4-tE4)^2 + (sWr-tWr)^2 +...
 			% (sHr-tHr)^2;%+(sE8-tE8)^2;
-			if(temp < min)
+			if(temp < min_val)
 				mI=j;
-				min=temp;
+				min_val=temp;
 			end
 		end
 
@@ -52,7 +52,7 @@ function minDist1(train, tbb, sample, sbb)
 		tx0 = tbb(mI,3);
 		tx1 = tbb(mI,4);
 		roi_t = train(ty0:ty1,tx0:tx1);
-		fprintf('i=%d:%c, mI=%d, min=%f,\n',i, sbb(i,5), mI, min);
+		fprintf('i=%d:%c, mI=%d, min_val=%f,\n',i, sbb(i,5), mI, min_val);
 		figure;
 		subplot(1,2,1);imshow(roi_s);title('Sample1.raw');
 		subplot(1,2,2);imshow(roi_t);title('TrainingSet.raw');

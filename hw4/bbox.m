@@ -50,6 +50,9 @@ function bX=findX(strip, width, minY, maxY)
         if (minFound && val == 0),
 			maxX= i-1;
             maxFound=1;
+        elseif (minFound && i == width ),
+            maxX= i;
+            maxFound=1;
         end
 
 		if (minFound && maxFound),
