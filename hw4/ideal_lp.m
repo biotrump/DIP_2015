@@ -1,6 +1,7 @@
-% F(u,v) : M*N 
-%H(u,v) 
-%D(u,v) = sqrt((u-M/2)^2 +(v-N/2)^2)
+% @brief idea low pass filter
+% @param F(u,v) : M*N
+% @param D(u,v) = sqrt((u-M/2)^2 +(v-N/2)^2)
+% @return lp : the result image after idea low pass filter
 function lp=ideal_lp(F, D0)
     [M N]=size(F);
     lp=F;

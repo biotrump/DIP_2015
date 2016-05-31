@@ -1,5 +1,5 @@
 %http://stackoverflow.com/questions/29315365/2d-discrete-fourier-transform-implementation-in-matlab
-% signal is a matrix of MxN size
+%@PARAM signal is a matrix of MxN size
 %Matrix Form of 2D DFT
 %http://fourier.eng.hmc.edu/e161/lectures/fourier/node11.html
 %DFT : X = W_M' * x * W_N'
@@ -16,7 +16,7 @@ function res=IDFT2D(signal)
     x=[1:N];%1,2,3...M
 
     %x=u'
-    [x, u]=meshgrid(x,x);%meshgrid(x,x) = [1 2 ..M;1 2 ..M;1 2..M;...], M*M 
+    [x, u]=meshgrid(x,x);%meshgrid(x,x) = [1 2 ..M;1 2 ..M;1 2..M;...], M*M
 
     %http://www.mathworks.com/help/matlab/ref/exp.html
     %Y = exp(1i*pi) = -1.0000 + 0.0000i
@@ -24,7 +24,7 @@ function res=IDFT2D(signal)
     %http://fourier.eng.hmc.edu/e161/lectures/fourier/node11.html
     pre_dft=(Wn.^((u-1).*(x-1)))/N;
 
-    post_dft = pre_dft.'; %".'" only transpose matrix, but ' is "complex conjugate transform!!! 
+    post_dft = pre_dft.'; %".'" only transpose matrix, but ' is "complex conjugate transform!!!
     %1D to 2D
     res = pre_dft*signal*post_dft;
 end

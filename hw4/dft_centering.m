@@ -1,4 +1,6 @@
-%image : rowxcol uint8
+% @BRIEF preprocessing the spatial domain image for centering DFT
+% @param image : rowxcol uint8
+% @return centered the result spatial domain image
 function centered=dft_centering(image)
     [row,col]=size(image);
     centered=int16(image);

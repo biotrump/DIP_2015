@@ -1,15 +1,18 @@
-function p1(row, col, raw_image)
+% PROBLEM 2: Morphological Processing
+% Implementation: main program for problem 2
+% M-file name: p2.m
+% Usage: p2
+% Output image:
+% Parameters: no
+% p2 loads Sample2.raw, 256x256, image. It performs morphological operations.
+function p2()
     close all;
-    if nargin < 3
-        fprintf('raw_show syntax : row col raw_image\n');
-        return;
-    end
     %Sample1.raw : 256x256
     %Sample2.raw : 256x256
     %Sample3.raw : 256x256
     %TrainingSet.raw : 450 x 248
-    %row=324;  col=324;
-    %raw_image='..\raw\sample4.raw';
+    row=256;  col=256;
+    raw_image='sample2.raw';
     fin=fopen(raw_image,'r');
     I=fread(fin,row*col,'uint8=>uint8');
     fclose(fin);
@@ -18,6 +21,7 @@ function p1(row, col, raw_image)
     figure;
     imshow(S1);title(raw_image);
 
+    %direct call matlab
     figure('name','skeleton');
     skeleton = bwmorph(S1,'skel',Inf);
     imshow(skeleton);title('skelenton Image');

@@ -1,4 +1,6 @@
-%perform 3x3 median filter for pepper and salt noise
+% @Brief median filter to perform 3x3 median filter for pepper and salt noise
+% @param A : the input image
+% @return B : the filtered image
 function B = median(A)
 	%PAD THE MATRIX WITH ZEROS ON ALL SIDES
 	modifyA=zeros(size(A)+2,'uint8');

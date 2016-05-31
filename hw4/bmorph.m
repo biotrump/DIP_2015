@@ -1,5 +1,4 @@
-%
-% Dilate a binary image with structuring element
+% @BRIEF Dilate a binary image with structuring element
 % @param inimg The input image
 % @param se The structuring element (s.e.)
 % @param origRow The row coordinate of the origin of the s.e., default is 0

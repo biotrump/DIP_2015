@@ -1,8 +1,7 @@
-% inputs
-% im is the fourier transform of the image
-% D0 is the cutoff circle radius
-%outputs
-% res is the filtered image
+% @brief Gaussian Low pass filter
+% @param im is the fourier transform of the image
+% @param D0 is the cutoff circle radius
+% @return res is the filtered image
 function res = glp(im,D0)
     [M,N]=size(im);
     d0=D0;

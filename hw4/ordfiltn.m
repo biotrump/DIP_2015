@@ -1,46 +1,24 @@
-## Copyright (C) 2008 Soren Hauberg
-##
-## This program is free software; you can redistribute it and/or
-## modify it under the terms of the GNU General Public License
-## as published by the Free Software Foundation; either version 3
-## of the License, or (at your option) any later version.
-##
-## This program is distributed in the hope that it will be useful, but
-## WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-## General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program; If not, see <http://www.gnu.org/licenses/>.
-##
-## This function is based on 'ordfilt2' by Teemu Ikonen which is released under
-## GPLv2 or later.
-
 ## -*- texinfo -*-
 ## @deftypefn {Function File} {} ordfiltn(@var{A}, @var{nth}, @var{domain}, [@var{S}, @var{padding}])
 ## Two dimensional ordered filtering.
 ##
-## Ordered filter replaces an element of @var{A} with the @var{nth} 
-## element of the sorted set of neighbours defined by the logical 
+## Ordered filter replaces an element of @var{A} with the @var{nth}
+## element of the sorted set of neighbours defined by the logical
 ## (boolean) matrix @var{domain}.
-## Neighbour elements are selected to the sort if the corresponding 
+## Neighbour elements are selected to the sort if the corresponding
 ## element in the @var{domain} matrix is true.
-## 
-## The optional variable @var{S} is a matrix of size(@var{domain}). 
-## Values of @var{S} corresponding to nonzero values of domain are 
+##
+## The optional variable @var{S} is a matrix of size(@var{domain}).
+## Values of @var{S} corresponding to nonzero values of domain are
 ## added to values obtained from @var{A} when doing the sorting.
 ##
-## Optional variable @var{padding} determines how the matrix @var{A} 
+## Optional variable @var{padding} determines how the matrix @var{A}
 ## is padded from the edges. See @code{padarray} for details.
-## 
+##
 ## @seealso{ordfilt2, padarray}
 ## @end deftypefn
 
-
-## Author: Teemu Ikonen <tpikonen@pcu.helsinki.fi>
-## Created: 5.5.2000
-## Keywords: image processing filtering
-
+% @param domain structure element
 function retval = ordfiltn(A, nth, domain, varargin)
   ## Check input
   if (nargin < 3)
@@ -61,13 +39,13 @@ function retval = ordfiltn(A, nth, domain, varargin)
   if (isscalar(domain))
     domain = ones(repmat(domain, 1, ndims(A)), "logical");
   endif
-  
+
   if (ndims(A) != ndims(domain))
     error("ordfiltn: first and second argument must have same dimensionality");
   endif
   if (any(size(A) < size(domain)))
     error("ordfiltn: domain array cannot be larger than the data array");
-  endif    
+  endif
 
   ## Parse varargin
   S = zeros(size(domain));
@@ -93,7 +71,7 @@ function retval = ordfiltn(A, nth, domain, varargin)
     idx{k} = (even(k)+1):size(A,k);
   endfor
   A = A(idx{:});
-  
+
   ## Perform the filtering
   retval = __spatial_filtering__ (A, domain, "ordered", S, nth);
 endfunction

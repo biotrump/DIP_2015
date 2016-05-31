@@ -1,3 +1,12 @@
+% PROBLEM 1: Shape analysis
+% Implementation: main program for problem 1
+% M-file name: p1.m
+% Usage: p1
+% Output image:
+% Parameters: no
+% p1 loads Sample1.raw, 256x256, image and TrainingSet.raw, 450 x 248, image. It will
+% perform morphological operations and shape analysis to find the matches between
+% Sample1.raw and TrainingSet.raw.
 %Sample1.raw : 256x256
 %Sample2.raw : 256x256
 %Sample3.raw : 256x256
@@ -5,8 +14,9 @@
 function p1()
     close all;
     clear;
-
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %loading TrainingSet.raw
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     trow=450;  tcol=248;
     train_image='TrainingSet.raw';
     fin=fopen(train_image,'r');
@@ -16,7 +26,9 @@ function p1()
     T1=T1';%image is in row-major, but matlab uses col0-major
     figure;
     imshow(T1);title(train_image);
-
+    figure('name','hist of TrainingSet.raw');
+    h = histogram(T1,256);
+    
     if 1,
         Tlevel=142; %binary thredshold, the value is from ostu threshold!
         TBW=T1;
@@ -100,8 +112,9 @@ function p1()
     end
     figure('name','bounding thinning TrainingSet.raw');
     imshow(tbbt);title('bounding thinning TrainingSet.raw');
-
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %read sample1.raw
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     row=256;  col=256;
     sample_image='Sample1.raw';
     fin=fopen(sample_image,'r');
@@ -111,6 +124,8 @@ function p1()
     S1=S1';%image is in row-major, but matlab uses col0-major
     figure;
     imshow(S1);title(sample_image);
+    figure('name','hist of Sample1.raw');
+    h = histogram(S1,256);
 
     if 1,
         level=111;  %binary threshold by ostu threshold
