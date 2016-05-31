@@ -1,3 +1,5 @@
+% @BRIEF find the bounding boxes for each alphabet.
+% @param imgsrc :the source image
 % @return bl = y0 y1 x0 x1; list to the bounding box
 function bl=bbox(imgsrc)
 	[height, width]=size(imgsrc);

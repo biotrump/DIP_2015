@@ -1,3 +1,4 @@
+% @Brief finding the minimun distances of features between Sample1.raw and TrainingSet.raw. 
 % @param train : logical training image
 % @param tbb : training image bounding box, y0,y1,x0,x1
 % @param sample :logical sample image

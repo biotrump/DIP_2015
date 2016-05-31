@@ -1,6 +1,16 @@
+% @brief calculate all known morphological features
+% @param roi :the bounding box to retrieve the feature.
+% @param method : bit quad method , 'GRAY' or 'Duda'
+% @return
+%Bit Quad Pattern Q0 Q1,Q2,Q3,Q4 Qd
 % Wr : bounding width ratio (w)/(w+h)
 % Hr : bounding height ratio (h)/(w+h)
 % Euler number : E = H-C
+% A0, Aa : Area,
+% P : Perimeter,
+% C0 : Circularity (thinness ratio)
+% La, Wa, Thin objects (typewritten or script characters)
+%Bounding Box Ratio
 function [A0, Aa, P, Pa, E4, E8, La, Wa, Wr, Hr, C0]=get_feature(roi,method)
     roi=logical(roi);
     [r,w]=size(roi);

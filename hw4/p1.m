@@ -28,7 +28,7 @@ function p1()
     imshow(T1);title(train_image);
     figure('name','hist of TrainingSet.raw');
     h = histogram(T1,256);
-    
+
     if 1,
         Tlevel=142; %binary thredshold, the value is from ostu threshold!
         TBW=T1;
@@ -171,6 +171,7 @@ function p1()
     GTBW=thinning;
     tbw=thinning;
     %stfi=1;
+    %fine tune bounding boxes
 	for i=1:size(gtruth_tbl,1)
         x0=gtruth_tbl(i,1);
         y0=gtruth_tbl(i,2);
@@ -213,7 +214,9 @@ function p1()
     %subplot(2,3,2);imshow(S1);title('Sample2.raw');
     %subplot(2,3,4);imshow(thinning);title('thinning');
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%find the matched alphabet by feature distance
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%bounding tbb:y0,y1,x0,x1
 	%gtruth_tbl : x0 y0 x1 y1
 	minDist1(tthinning, tbb, thinning, gtruth_tbl);

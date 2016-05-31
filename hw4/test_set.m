@@ -1,5 +1,5 @@
-%setup the bounding box for the test image
-%manually select the coarse boundinb box and the fine tune
+% @brief setup the bounding box for the test image
+% manually select the coarse boundinb box and the fine tune
 function gtruth_tbl=test_set(image)
 %x0,y0,x1,y1
 bbox=[8,8, 45,46 'x';...
@@ -47,8 +47,8 @@ gtruth_tbl=[    8    8   45   46   89;...
   106  195  168  253   84;...
   170  192  206  230   86;...
   210  198  235  230   53];
-  
-    bbox=uint8(bbox); 
+
+    bbox=uint8(bbox);
     fig_bc=figure('name','bchar');
     for i=1:size(bbox,1)
         x0=bbox(i,1);y0=bbox(i,2);
